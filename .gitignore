@@ -1,0 +1,8 @@
+.idea
+.cproject
+.project
+.yotta.json
+org.eclipse.cdt.codan.core.prefs
+build
+yotta_modules
+yotta_targets

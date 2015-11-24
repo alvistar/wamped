@@ -1,23 +1,28 @@
 //
-// Created by Alessandro Viganò on 17/11/15.
+// Created by Alessandro Viganò on 24/11/15.
 //
 
-#ifndef CPPWAMP_MSGUNPACK_H
-#define CPPWAMP_MSGUNPACK_H
+#ifndef WAMP_MBED_MSGUNPACK_H
+#define WAMP_MBED_MSGUNPACK_H
 
 
 #include <stddef.h>
-#include <msgpack/unpack.h>
+#include "mpack/mpack-node.h"
+#include <string>
 
 class MsgUnpack {
 private:
-    msgpack_unpacker up;
-    msgpack_unpacked result;
+    mpack_tree_t tree;
 public:
     MsgUnpack(char* buffer, size_t size);
-    msgpack_unpack_return next();
-    msgpack_object getObj();
+    ~MsgUnpack();
+
+    mpack_node_t getRoot();
+    mpack_error_t getError();
+    std::string toJson();
+
+    static void nodeToJson(mpack_node_t node, std::stringstream &s);
 };
 
 
-#endif //CPPWAMP_MSGUNPACK_H
+#endif //WAMP_MBED_MSGUNPACK_H

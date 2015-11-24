@@ -1,21 +1,29 @@
 //
-// Created by Alessandro Viganò on 17/11/15.
+// Created by Alessandro Viganò on 24/11/15.
 //
 
 #include "MsgUnpack.h"
+#include "MpackPrinter.h"
+#include <sstream>
 
 MsgUnpack::MsgUnpack(char *buffer, size_t size) {
-    msgpack_unpacker_init(&up, MSGPACK_UNPACKER_INIT_BUFFER_SIZE);
-    msgpack_unpacker_reserve_buffer(&up, size);
-    memcpy(msgpack_unpacker_buffer(&up), buffer, size);
-    msgpack_unpacker_buffer_consumed(&up, size);
-    msgpack_unpacked_init(&result);
+    mpack_tree_init(&tree, buffer, size);
 }
 
-msgpack_unpack_return MsgUnpack::next() {
-    return msgpack_unpacker_next(&up, &result);
+MsgUnpack::~MsgUnpack() {
+    mpack_tree_destroy(&tree);
 }
 
-msgpack_object MsgUnpack::getObj() {
-    return result.data;
+mpack_node_t MsgUnpack::getRoot() {
+    return mpack_tree_root(&tree);
+}
+
+mpack_error_t MsgUnpack::getError() {
+    return tree.error;
+}
+
+std::string MsgUnpack::toJson() {
+    MpackPrinter printer(getRoot());
+    return printer.toJSON();
+
 }

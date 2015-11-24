@@ -1,7 +1,13 @@
-cmake_minimum_required(VERSION 3.3)
-project(wamp_mbed)
+if(YOTTA_CFG_MBED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else(YOTTA_CFG_MBED)
+    cmake_minimum_required(VERSION 3.3)
+    project(wamp_mbed)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    
 
-add_subdirectory(source)
+endif(YOTTA_CFG_MBED)
+
 add_subdirectory(mpack)
+add_subdirectory(source)
+

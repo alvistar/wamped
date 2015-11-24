@@ -3,43 +3,58 @@
 //
 
 #include "MsgPackCPP.h"
+#include "MsgUnpack.h"
+#include "mpack/mpack.h"
+#include <sstream>
 
 MsgPack::MsgPack() {
-    msgpack_sbuffer_init(&sbuf);
-    msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write);
+    mpack_writer_init(&writer, data, sizeof(data));
 }
 
-void MsgPack::pack_array(size_t number) {
-    msgpack_pack_array(&pk, number);
+void MsgPack::pack_array(uint32_t number) {
+    mpack_start_array(&writer, number);
 }
 
 void MsgPack::pack(std::string s) {
-    msgpack_pack_str(&pk, s.length());
-    msgpack_pack_str_body(&pk, s.c_str(), s.length());
+    mpack_write_cstr(&writer, s.c_str());
 }
 
 void MsgPack::print() {
-    msgpack_zone mempool;
-    msgpack_zone_init(&mempool, 2048);
-
-    msgpack_object deserialized;
-    msgpack_unpack(sbuf.data, sbuf.size, NULL, &mempool, &deserialized);
-    msgpack_object_print(stdout, deserialized);
-    msgpack_zone_destroy(&mempool);
+    mpack_tree_t tree;
+    mpack_tree_init(&tree, data, mpack_writer_buffer_used(&writer));
+    mpack_node_t root = mpack_tree_root(&tree);
+    mpack_node_print (root);
 }
 
 void MsgPack::clear() {
-    msgpack_sbuffer_clear(&sbuf);
+    mpack_writer_init(&writer, data, sizeof(data));
 }
 
 void MsgPack::pack(int i) {
-    msgpack_pack_int(&pk, i);
+    mpack_write_i16(&writer, i);
 }
 
 void MsgPack::pack(unsigned long long int i) {
-    msgpack_pack_uint64(&pk,i);
+    mpack_write_u64(&writer, i);
 }
 
-void MsgPack::pack_map(size_t n) {
-    msgpack_pack_map(&pk, n);
+void MsgPack::pack_map(uint32_t n) {
+    mpack_start_map(&writer, n);
+}
+
+size_t MsgPack::getUsedBuffer() {
+    return mpack_writer_buffer_used(&writer);
+}
+
+char *MsgPack::getData() {
+    return data;
+}
+
+void MsgPack::pack(MsgPack mp) {
+    mpack_write_bytes(&writer, mp.getData(),mp.getUsedBuffer());
+}
+
+std::string MsgPack::getJson() {
+    MsgUnpack unp {getData(), getUsedBuffer()};
+    return unp.toJson();
 }

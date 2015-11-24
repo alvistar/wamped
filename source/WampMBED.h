@@ -9,9 +9,10 @@
 #include <unordered_map>
 #include "WampTransport.h"
 #include "MsgPackCPP.h"
+#include "mpack/mpack.h"
 
 typedef unsigned long long int WampID;
-typedef function<void(msgpack_object&, msgpack_object&)> TSubscriptionCallback;
+typedef function<void(mpack_node_t &, mpack_node_t &)> TSubscriptionCallback;
 
 class WampMBED {
 private:
@@ -20,6 +21,8 @@ private:
     std::mt19937_64 gen;
     MsgPack mp;
     unordered_map <WampID, TSubscriptionCallback> subscriptionsRequests;
+    unordered_map <WampID, TSubscriptionCallback> subscriptions;
+    unsigned long long int requestCount = 0;
 
     std::function<void()> onJoin {nullptr};
 
@@ -34,6 +37,7 @@ public:
 
     void hello(string realm);
     void subscribe(string topic, TSubscriptionCallback callback);
+    void publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW);
 
     void parseMessage(char *buffer, size_t size);
 

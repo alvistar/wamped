@@ -8,8 +8,12 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
-#define LOG(x) std::cout
 
+#ifdef DEBUG_WAMP_TRANSPORT
+#include "logger.h"
+#else
+#define LOG(X)
+#endif
 
 typedef enum {WAITHANDSHAKE,WAITPREFIX,WAITMSG} stateT;
 
@@ -38,7 +42,7 @@ void WampTransportRaw::handshake()
     ssize_t  n = write(sockfd, handshake, 4);
 
     if (n < 0) {
-        LOG(ERROR) << "ERROR writing to socket";
+        LOG("ERROR writing to socket");
         exit(1);
     }
 }
@@ -52,14 +56,14 @@ void WampTransportRaw::connect()
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (sockfd < 0) {
-        LOG(ERROR) << "ERROR opening socket";
+        LOG("ERROR opening socket");
         exit(1);
     }
 
     server = gethostbyname(host.c_str());
 
     if (server == NULL) {
-        LOG(ERROR) << "ERROR, no such host";
+        LOG("ERROR, no such host");
         exit(0);
     }
 
@@ -70,7 +74,7 @@ void WampTransportRaw::connect()
 
     /* Now connect to the server */
     if (::connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-        LOG(ERROR) << "ERROR connecting";
+        LOG("ERROR connecting");
         exit(1);
     }
 
@@ -82,13 +86,14 @@ int WampTransportRaw::process()
     ssize_t n = read(sockfd, buffer, sizeof(buffer));
 
     if (n < 0) {
-        LOG(ERROR) << "ERROR reading from socket";
+        LOG("ERROR reading from socket");
         exit(1);
     }
 
     if (n>0) {
         decode(buffer, (int) n);
     }
+    return 1;
 }
 
 void WampTransportRaw::sendMessage(string &msg) {
@@ -105,7 +110,7 @@ void WampTransportRaw::sendMessage(string &msg) {
     n = write(sockfd, prefix, 4);
 
     if (n < 0) {
-        LOG(ERROR) << "ERROR writing to socket";
+        LOG("ERROR writing to socket");
         exit(1);
     }
 
@@ -113,7 +118,7 @@ void WampTransportRaw::sendMessage(string &msg) {
     n = write(sockfd, msg.c_str(), msg_size);
 
     if (n < 0) {
-        LOG(ERROR) << "ERROR writing to socket";
+        LOG("ERROR writing to socket");
         exit(1);
     }
 
@@ -133,7 +138,7 @@ void WampTransportRaw::sendMessage(char *buffer, size_t size) {
     n = write(sockfd, prefix, 4);
 
     if (n < 0) {
-        LOG(ERROR) << "ERROR writing to socket";
+        LOG("ERROR writing to socket");
         exit(1);
     }
 
@@ -141,7 +146,7 @@ void WampTransportRaw::sendMessage(char *buffer, size_t size) {
     n = write(sockfd, buffer, msg_size);
 
     if (n < 0) {
-        LOG(ERROR) << "ERROR writing to socket";
+        LOG("ERROR writing to socket");
         exit(1);
     }
 }
@@ -156,7 +161,7 @@ void WampTransportRaw::decode(char *buffer, int size)
     unsigned long int msgSize=0;
     int serializer_type;
 
-    LOG(DEBUG) << "Decoding Size:" << size << "Payload:" << toHexString((const unsigned char *) buffer, size);
+    //LOG(DEBUG) << "Decoding Size:" << size << "Payload:" << toHexString((const unsigned char *) buffer, size);
 
     for (int i=0; i<size; i++) {
         switch (state) {
@@ -164,7 +169,7 @@ void WampTransportRaw::decode(char *buffer, int size)
                 switch (byteNumber) {
                     case 0: //First byte must be 0x7f
                         if (buffer[i] != 0x7f) {
-                            LOG(ERROR) << "Invalid magic byte";
+                            LOG("Invalid magic byte");
                         }
                         else {
                             byteNumber++;
@@ -172,21 +177,21 @@ void WampTransportRaw::decode(char *buffer, int size)
                         break;
                     case 1: //Read max len and streaming size
                         max_len_send = (unsigned long int) pow(2, (9 + ((unsigned char) buffer[i] >>4)));
-                        LOG(DEBUG) << "Max bytes per message " <<  max_len_send;
+                        LOG("Max bytes per message " <<  max_len_send);
                         serializer_type = buffer[i] & 0x0f;
-                        LOG(DEBUG) << "Serializer  " <<  serializer_type;
+                        LOG("Serializer  " <<  serializer_type);
                         byteNumber++;
                         break;
                     case 2: // First reserved byte
                         if (buffer[i] != 0) {
-                            LOG(ERROR) << "Reserved byte must be zero";
+                            LOG("Reserved byte must be zero");
                             byteNumber = 0;
                         }
                         byteNumber++;
                         break;
                     case 3: // Second reserved byte
                         if (buffer[i] != 0) {
-                            LOG(ERROR) << "Reserved byte must be zero";
+                            LOG("Reserved byte must be zero");
                             byteNumber = 0;
                         }
                         state = WAITPREFIX;
@@ -205,18 +210,19 @@ void WampTransportRaw::decode(char *buffer, int size)
                     break;
                 }
                 else {
-                    LOG(DEBUG) << "Prefix " << toHexString((const unsigned char *) prefixMSG, 4);
+                    LOG("Prefix " << toHexString((const unsigned char *) prefixMSG, 4));
                     msgSize = ntohl(*((unsigned long *) &prefixMSG));
-                    LOG(DEBUG) << "Msg size: " << msgSize;
+                    LOG("Msg size: " << msgSize);
                     state = WAITMSG;
                     byteNumber = 0;
                 }
+
             case WAITMSG:
                 message[byteNumber]=buffer[i];
                 byteNumber++;
 
                 if (byteNumber == msgSize) {
-                    LOG(DEBUG) << "Message: " << message;
+                    LOG("Frame received- delivering to WAMP");
                     state = WAITPREFIX;
                     byteNumber=0;
                     onMessageBin(message, msgSize);
