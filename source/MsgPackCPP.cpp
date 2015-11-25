@@ -58,3 +58,4 @@ std::string MsgPack::getJson() {
     MsgUnpack unp {getData(), getUsedBuffer()};
     return unp.toJson();
 }
+

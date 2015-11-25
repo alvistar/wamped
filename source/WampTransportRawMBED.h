@@ -49,6 +49,7 @@ public:
     void onReceive(Socket *s);
 
     void onDisconnect(TCPStream *s);
+    void onSent(Socket *s, uint16_t nbytes);
 };
 
 

@@ -7,7 +7,7 @@
 
 #include "WampTransport.h"
 
-#define BUFFERSIZE 1024
+#define BUFFERSIZE 4096
 #define MAXMESSAGESIZE 2048
 
 class WampTransportRaw: public WampTransport{

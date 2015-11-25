@@ -18,4 +18,16 @@ int main() {
     mp.print();
 
     LOG("mylog" << 2);
+
+    MsgPack mp2;
+    mp2 << MPARR(3) << 1 << "realm1" << MPMAP(1)
+            << "roles" << MPMAP(1) << "subscriber" << MPMAP(0);
+
+    mp2.print();
+
+    MsgPackArr mp3 {"gattina"};
+    mp3.print();
+
+    MsgPackMap mp4 {"colore","rosso","pesce","spigola"};
+    mp4.print();
 }

@@ -27,17 +27,22 @@ private:
     std::function<void()> onJoin {nullptr};
 
 
+
 public:
     WampID sessionID;
     bool connected {false};
+    std::function<void()> onClose {nullptr};
 
     WampMBED(WampTransport &transport);
     void connect(std::function<void()> onJoin);
     void connect(std::function<void()> onJoin, std::function<void()> onError);
+    void close();
 
     void hello(string realm);
     void subscribe(string topic, TSubscriptionCallback callback);
+    void publish(string const &topic);
     void publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW);
+
 
     void parseMessage(char *buffer, size_t size);
 

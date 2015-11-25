@@ -55,6 +55,7 @@ WampTransportRaw::WampTransportRaw(string host, int port):host(host),port(port)
     _stream = unique_ptr<TCPStream> (new TCPStream (SOCKET_STACK_LWIP_IPV4));
     _stream->open(SOCKET_AF_INET4);
     _stream->setOnError(TCPStream::ErrorHandler_t(this, &WampTransportRaw::onError));
+    _stream->setOnSent(TCPStream::SentHandler_t(this, &WampTransportRaw::onSent));
 }
 
 void WampTransportRaw::connect() {
@@ -71,8 +72,15 @@ void WampTransportRaw::sendMessage(string &msg) {
     //
 }
 
+//void WampTransportRaw::sendMessage(char* buffer, size_t size) {
+//	FunctionPointer2<void, char*, size_t> ptr_to_sendMessage (this, &WampTransporRaw::_sendMessage);
+//	minar::Scheduler::postCallBack(ptr_to_sendMessage(buffer,size));
+//}
+
 void WampTransportRaw::sendMessage(char* buffer, size_t size) {
-    char prefix[4];
+    LOG("Sending binary of length " << size);
+
+	char prefix[4];
     socket_error_t err;
 
     prefix[0] = 0;
@@ -87,8 +95,6 @@ void WampTransportRaw::sendMessage(char* buffer, size_t size) {
     /* Send message to the server */
 	err = _stream->send(buffer, size);
     _stream->error_check(err);
-
-
 
 }
 
@@ -117,6 +123,7 @@ void WampTransportRaw::onError(Socket *s, socket_error_t err) {
     (void) s;
     LOG("MBED: Socket Error: " << socket_strerror(err) << ":" << err);
     _stream->close();
+    onClose();
     // _error = true;
 
 }
@@ -153,6 +160,13 @@ void WampTransportRaw::onReceive(Socket *s) {
 
     decode(_buffer, _bpos);
 
+}
+void WampTransportRaw::onSent(Socket *s, uint16_t nbytes)
+{
+    (void) s;
+    //_unacked -= nbytes;
+
+    LOG("Sent bytes " << nbytes);
 }
 
 void WampTransportRaw::decode(char *buffer, int size) {

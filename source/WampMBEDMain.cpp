@@ -2,52 +2,46 @@
 #include "WampMBED.h"
 #include "logger.h"
 #include "MpackPrinter.h"
-
-#ifdef YOTTA_CFG_MBED
 #include "mbed-drivers/mbed.h"
 #include "WampTransportRawMBED.h"
-
-#else //YOTTA_CFG_MBED
-#include "WampTransportRaw.h"
-#include "MsgUnpack.h"
-
-
-#endif //YOTTA_CFG_MBED
 
 WampTransportRaw *wt;
 WampMBED *wamp;
 
 static void blinky(void) {
-#ifdef YOTTA_CFG_MBED
     static DigitalOut led(LED1);
     led = !led;
-    //printf("LED = %d \r\n",led.read());
-#endif
 }
 
-#ifdef YOTTA_CFG_MBED
+static void switchon(void) {
+	static DigitalOut led(LED_BLUE);
+	led = 0;
+}
+
+static void switchoff(void) {
+    static DigitalOut led(LED_BLUE);
+    led = 1;
+}
+
 static void pressed() {
-    MsgPack args;
+//    MsgPack args;
 
-    args.pack_array(1);
-    args.pack("pressed");
+//    args.pack_array(1);
+//    args.pack("pressed");
 
-    MsgPack kwargs;
-    args.pack_map(0);
-
+//    MsgPack kwargs;
+//    args.pack_map(0);
+//
     LOG("Publishing pressed event");
-    wamp->publish("button", args, kwargs);
+//    wamp->publish("button");
+
+    wamp->publish("button");
 
 }
-#endif
 
-#ifdef YOTTA_CFG_MBED
 InterruptIn button(SW2);
 
 void app_start(int, char**) {
-#else //YOTTA_CFG_MBED
-int main() {
-#endif //YOTTA_CFG_MBED
 
     std::cout << "Hello world!\n";
 
@@ -57,31 +51,28 @@ int main() {
     wamp->connect([&]() {
         LOG("Session joined :" << wamp->sessionID);
 
-        MsgPack args;
+        wamp->publish("test", MsgPackArr {"hello"}, MsgPackMap {});
 
-        args.pack_array(1);
-        args.pack("hello");
+//        wamp->subscribe("com.example.oncounter", [](mpack_node_t &args, mpack_node_t &kwargs) {
+//            LOG("Received event: " << MpackPrinter(args).toJSON());
+//            blinky();
+//        });
 
-        MsgPack kwargs;
-        args.pack_map(0);
+        wamp->subscribe("com.example.switchon",[](mpack_node_t &args, mpack_node_t &kwargs) {
+        	LOG("Received switchon");
+        	switchon();
+        });
 
-        wamp->publish("test", args, kwargs);
-
-        wamp->subscribe("com.example.oncounter", [](mpack_node_t &args, mpack_node_t &kwargs) {
-            LOG("Received event: " << MpackPrinter(args).toJSON());
-            blinky();
+        wamp->subscribe("com.example.switchoff",[](mpack_node_t &args, mpack_node_t &kwargs) {
+            LOG("Received switchon");
+            switchoff();
         });
     });
 
-#ifdef YOTTA_CFG_MBED
     button.rise (pressed);
-#endif
 
-#ifndef YOTTA_CFG_MBED
-    int n=0;
-    while (n>=0) {
-        n= wt->process();
-    }
-#endif //YOTTA_CFG_MBED
+    wamp->onClose = [&]() {
+        //NVIC_SystemReset();
+    };
 
 }

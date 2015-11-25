@@ -29,7 +29,7 @@ WampMBED::WampMBED(WampTransport &transport):transport(transport) {
     };
 
     this->transport.onClose = [this]() {
-        //close();
+        close();
     };
 
     this->transport.onMessageBin = [this](char *buffer, size_t size) {
@@ -92,6 +92,21 @@ void WampMBED::subscribe(string topic, TSubscriptionCallback callback) {
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
+void WampMBED::publish(string const &topic) {
+    if (!connected)
+        return;
+
+    mp.clear();
+    mp.pack_array(4);
+    mp.pack((int) WAMP_MSG_PUBLISH);
+    mp.pack(requestCount);
+    mp.pack_map(0);
+    mp.pack(topic);
+    LOG ("Publishing to " << topic << "- " << mp.getJson());
+
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+};
+
 void WampMBED::publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW) {
     if (!connected)
         return;
@@ -105,7 +120,7 @@ void WampMBED::publish(string const &topic, const MsgPack& arguments, const MsgP
     mp.pack(arguments);
     mp.pack(argumentsKW);
 
-    LOG ("Publishing to " << topic);
+    LOG ("Publishing to " << topic << "- " << mp.getJson());
 
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
@@ -161,16 +176,24 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
         case WAMP_MSG_EVENT: {
 
             unsigned long long int subscriptionID = mpack_node_u64(mpack_node_array_at(root,1));
-            mpack_node_t args = mpack_node_array_at(root, 4);
-            mpack_node_t kwargs;
-
 
             if (munp.getError() != mpack_ok) {
                 LOG ("Bad EVENT Message");
                 return;
             }
 
-            if (mpack_node_array_length(root) == 6) {
+            mpack_node_t args;
+            mpack_node_t kwargs;
+
+            if (mpack_node_array_length(root) >4) {
+                args = mpack_node_array_at(root, 4);
+            }
+            else {
+                args.data = nullptr;
+                args.tree = nullptr;
+            }
+
+            if (mpack_node_array_length(root) >5) {
                kwargs = mpack_node_array_at(root, 5);
             }
             else {
@@ -193,4 +216,12 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
         }
 
     }
+}
+
+void WampMBED::close() {
+    LOG("Wamp Closed Connection");
+    connected = false;
+    subscriptionsRequests.clear();
+    subscriptions.clear();
+    onClose();
 }

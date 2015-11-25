@@ -125,7 +125,7 @@ void WampTransportRaw::sendMessage(string &msg) {
 }
 
 void WampTransportRaw::sendMessage(char *buffer, size_t size) {
-    unsigned long int msg_size;
+	unsigned long int msg_size;
     char prefix[4];
     msg_size = size;
     prefix[0] = 0;
