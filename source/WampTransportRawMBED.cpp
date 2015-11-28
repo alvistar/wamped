@@ -5,7 +5,7 @@
 #include "WampTransportRawMBED.h"
 #include "sal-stack-lwip/lwipv4_init.h"
 
-#define DEBUG_WAMP_TRANSPORT
+//#define DEBUG_WAMP_TRANSPORT
 
 #ifdef DEBUG_WAMP_TRANSPORT
 #include "logger.h"
@@ -61,7 +61,7 @@ WampTransportRaw::WampTransportRaw(string host, int port):host(host),port(port)
 void WampTransportRaw::connect() {
     LOG("Connecting...");
 
-    socket_error_t err = _stream->resolve("192.168.20.192", TCPStream::DNSHandler_t(this, &WampTransportRaw::onDNS));
+    _stream->resolve("mbedwamp.tk", TCPStream::DNSHandler_t(this, &WampTransportRaw::onDNS));
 }
 
 int WampTransportRaw::process() {
@@ -69,7 +69,7 @@ int WampTransportRaw::process() {
 }
 
 void WampTransportRaw::sendMessage(string &msg) {
-    //
+    (void) msg;
 }
 
 //void WampTransportRaw::sendMessage(char* buffer, size_t size) {
@@ -77,25 +77,45 @@ void WampTransportRaw::sendMessage(string &msg) {
 //	minar::Scheduler::postCallBack(ptr_to_sendMessage(buffer,size));
 //}
 
-void WampTransportRaw::sendMessage(char* buffer, size_t size) {
-    LOG("Sending binary of length " << size);
+void WampTransportRaw::_sendMessage() {
 
 	char prefix[4];
     socket_error_t err;
 
+    writeReady = false;
+    message_t msg = messages.front();
+    unacked = msg.size + 4;
+
+    LOG("Sending binary of length " << msg.size);
+
     prefix[0] = 0;
-    prefix[3] = (char) (size & 0xff);
-    prefix[2] = (char) ((size >> 8) & 0xff);
-    prefix[1] = (char) ((size >> 16) & 0xff);
+    prefix[3] = (char) (msg.size & 0xff);
+    prefix[2] = (char) ((msg.size >> 8) & 0xff);
+    prefix[1] = (char) ((msg.size >> 16) & 0xff);
 
     /* Send prefix to the server */
 	err = _stream->send(prefix, 4);
     _stream->error_check(err);
 
     /* Send message to the server */
-	err = _stream->send(buffer, size);
+	err = _stream->send(msg.data, msg.size);
     _stream->error_check(err);
+}
 
+void WampTransportRaw::sendMessage(char* buffer, size_t size) {
+    message_t msg;
+    msg.size = size;
+    msg.data = new char[size];
+    memcpy(msg.data, buffer, size);
+	messages.push_back(msg);
+	dequeue();
+}
+
+void WampTransportRaw::dequeue() {
+	LOG("Dequeue - Queue size: " << messages.size());
+	if (writeReady && messages.size()>0) {
+		_sendMessage();
+	}
 }
 
 void WampTransportRaw::onDNS(Socket *s, struct socket_addr addr, const char *domain) {
@@ -164,9 +184,17 @@ void WampTransportRaw::onReceive(Socket *s) {
 void WampTransportRaw::onSent(Socket *s, uint16_t nbytes)
 {
     (void) s;
-    //_unacked -= nbytes;
+    unacked -= nbytes;
 
     LOG("Sent bytes " << nbytes);
+
+    if (unacked == 0) {
+    	writeReady = true;
+    	message_t msg = messages.front();
+    	delete (msg.data);
+    	messages.erase(messages.begin());
+    	dequeue();
+    }
 }
 
 void WampTransportRaw::decode(char *buffer, int size) {

@@ -25,11 +25,11 @@ public:
     function<void()> onClose = nullptr;
 
     virtual int process() = 0;
-    virtual void sendMessage(string &msg) {};
+    virtual void sendMessage(string &msg) {
+    	(void) msg;
+    };
     virtual void sendMessage(char* buffer, size_t size) = 0;
     virtual void connect() {};
-
-
 };
 
 class WampTransportServer {

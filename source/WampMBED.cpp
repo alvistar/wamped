@@ -22,7 +22,6 @@ WampMBED::WampMBED(WampTransport &transport):transport(transport) {
 
     gen = std::mt19937_64 (rd());
 
-
     this->transport.onConnect = [this]() {
         LOG ("Wamp Connected");
         this->hello("realm1");
@@ -104,6 +103,8 @@ void WampMBED::publish(string const &topic) {
     mp.pack(topic);
     LOG ("Publishing to " << topic << "- " << mp.getJson());
 
+    requestCount++;
+
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 };
 
@@ -121,6 +122,8 @@ void WampMBED::publish(string const &topic, const MsgPack& arguments, const MsgP
     mp.pack(argumentsKW);
 
     LOG ("Publishing to " << topic << "- " << mp.getJson());
+
+    requestCount++;
 
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }

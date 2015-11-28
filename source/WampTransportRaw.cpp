@@ -121,7 +121,6 @@ void WampTransportRaw::sendMessage(string &msg) {
         LOG("ERROR writing to socket");
         exit(1);
     }
-
 }
 
 void WampTransportRaw::sendMessage(char *buffer, size_t size) {

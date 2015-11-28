@@ -31,6 +31,7 @@ operator<<(LogData<Begin> begin,const char (&value)[n])
 
 inline void printList(std::ostream &os,None)
 {
+	(void) os;
 }
 
 

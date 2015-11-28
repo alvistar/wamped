@@ -3,9 +3,10 @@
 #include "logger.h"
 #include "MpackPrinter.h"
 #include "WampTransportRaw.h"
+#include "WampTransportWS.h"
 #include "MsgUnpack.h"
 
-WampTransportRaw *wt;
+WampTransportWS *wt;
 WampMBED *wamp;
 
 static void blinky(void) {
@@ -17,7 +18,7 @@ int main() {
 
     std::cout << "Hello world!\n";
 
-    wt = new WampTransportRaw {};
+    wt = new WampTransportWS {"ws://localhost:8081"};
     wamp = new WampMBED (*wt);
 
     wamp->connect([&]() {
