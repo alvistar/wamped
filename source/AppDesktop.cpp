@@ -6,7 +6,8 @@
 #include "WampTransportWS.h"
 #include "MsgUnpack.h"
 
-WampTransportRaw *wt;
+//WampTransportRaw *wt;
+WampTransportWS *wt;
 WampMBED *wamp;
 
 void onConnect() {
@@ -18,7 +19,8 @@ int main() {
 
     std::cout << "Hello world!\n";
 
-    wt = new WampTransportRaw {"localhost"};
+    //wt = new WampTransportRaw {"localhost"};
+    wt = new WampTransportWS {"ws://localhost:8081"};
     wamp = new WampMBED (*wt);
 
     wamp->onClose = ([&]() {

@@ -226,7 +226,7 @@ void WampTransportRaw::onReadable() {
 //    /* Read data out of the socket */
     socket.read(_buffer, _bpos);
 
-    LOG("Going to decode " <<_bpos);
+    //LOG("Going to decode " <<_bpos);
 
     if (_bpos>0 )
         decode(_buffer, _bpos);

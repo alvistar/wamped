@@ -3,8 +3,8 @@
 //
 
 #include "WampTransportWS.h"
-#include <netdb.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define DEBUG_WAMP_TRANSPORT
 
@@ -14,12 +14,6 @@
 #define LOG(X)
 #endif
 
-typedef int socket_t;
-#define INVALID_SOCKET (-1)
-#define SOCKET_ERROR   (-1)
-#define socketerrno errno
-#define SOCKET_EAGAIN_EINPROGRESS EAGAIN
-#define SOCKET_EWOULDBLOCK EWOULDBLOCK
 
 enum rlstate {
 
@@ -64,36 +58,6 @@ struct wsheader_type {
     uint8_t masking_key[4];
 };
 
-void WampTransportWS::hostname_connect(const std::string& hostname, int port) {
-    struct hostent *server;
-    struct sockaddr_in serv_addr;
-
-    /* Create a socket point */
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-    if (sockfd < 0) {
-        LOG("ERROR opening socket");
-        exit(1);
-    }
-
-    server = gethostbyname(hostname.c_str());
-
-    if (server == NULL) {
-        LOG("ERROR, no such host");
-        exit(0);
-    }
-
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-    serv_addr.sin_port = htons(port);
-
-    /* Now connect to the server */
-    if (::connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-        LOG("ERROR connecting");
-        exit(1);
-    }
-}
 
 void WampTransportWS::connect() {
 
@@ -106,12 +70,12 @@ void WampTransportWS::connect() {
         exit(1);
     }
 
-    if (sscanf(url.c_str(), "ws://%[^:/]:%d/%s", host, &port, path) == 3) {
+    if (sscanf(url.c_str(), "ws://%[^:/]:%hu/%s", host, &port, path) == 3) {
     }
     else if (sscanf(url.c_str(), "ws://%[^:/]/%s", host, path) == 2) {
         port = 80;
     }
-    else if (sscanf(url.c_str(), "ws://%[^:/]:%d", host, &port) == 2) {
+    else if (sscanf(url.c_str(), "ws://%[^:/]:%hu", host, &port) == 2) {
         path[0] = '\0';
     }
     else if (sscanf(url.c_str(), "ws://%[^:/]", host) == 1) {
@@ -119,18 +83,12 @@ void WampTransportWS::connect() {
         path[0] = '\0';
     }
     else {
-        fprintf(stderr, "ERROR: Could not parse WebSocket url: %s\n", url.c_str());
+        LOG("ERROR: Could not parse WebSocket url "<< url.c_str());
         exit(1);
     }
 
-    hostname_connect(host, port);
+    socket.connect(host, port);
 
-    if (sockfd == INVALID_SOCKET) {
-        fprintf(stderr, "Unable to connect to %s:%d\n", host, port);
-        exit(1);
-    }
-
-    handshake();
 
 }
 
@@ -138,62 +96,73 @@ void WampTransportWS::handshake() {
     char line[256];
     int status;
     int i;
-    snprintf(line, 256, "GET /%s HTTP/1.1\r\n", path); ::send(sockfd, line, strlen(line),0);
+    snprintf(line, 256, "GET /%s HTTP/1.1\r\n", path);
+    socket.send(line, strlen(line));
     if (port == 80) {
-        snprintf(line, 256, "Host: %s\r\n", host); ::send(sockfd, line, strlen(line), 0);
+        snprintf(line, 256, "Host: %s\r\n", host);
+        socket.send(line, strlen(line));
     }
     else {
-        snprintf(line, 256, "Host: %s:%d\r\n", host, port); ::send(sockfd, line, strlen(line), 0);
+        snprintf(line, 256, "Host: %s:%d\r\n", host, port);
+        socket.send(line, strlen(line));
     }
-    snprintf(line, 256, "Upgrade: websocket\r\n"); ::send(sockfd, line, strlen(line), 0);
-    snprintf(line, 256, "Connection: Upgrade\r\n"); ::send(sockfd, line, strlen(line), 0);
+    snprintf(line, 256, "Upgrade: websocket\r\n");
+    socket.send(line, strlen(line));
+    snprintf(line, 256, "Connection: Upgrade\r\n");
+    socket.send(line, strlen(line));
     if (!origin.empty()) {
-        snprintf(line, 256, "Origin: %s\r\n", origin.c_str()); ::send(sockfd, line, strlen(line), 0);
+        snprintf(line, 256, "Origin: %s\r\n", origin.c_str());
+        socket.send(line, strlen(line));
     }
-    snprintf(line, 256, "Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n"); ::send(sockfd, line, strlen(line), 0);
-    snprintf(line, 256, "Sec-WebSocket-Version: 13\r\n"); ::send(sockfd, line, strlen(line), 0);
-    snprintf(line, 256, "Sec-WebSocket-Protocol: wamp.2.msgpack\r\n"); ::send(sockfd, line, strlen(line), 0);
-    snprintf(line, 256, "\r\n"); ::send(sockfd, line, strlen(line), 0);
+    snprintf(line, 256, "Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n");
+    socket.send(line, strlen(line));
+    snprintf(line, 256, "Sec-WebSocket-Version: 13\r\n");
+    socket.send(line, strlen(line));
+    snprintf(line, 256, "Sec-WebSocket-Protocol: wamp.2.msgpack\r\n");
+    socket.send(line, strlen(line));
+    snprintf(line, 256, "\r\n");
+    socket.send(line, strlen(line));
 }
 
 void WampTransportWS::process() {
-    ssize_t n = read(sockfd, buffer, sizeof(buffer));
-
-    if (n < 0) {
-        LOG("ERROR reading from socket");
-        exit(1);
-    }
-
-    if (n>0) {
-        decode(buffer, (int) n);
-    }
-
-    //Sending
-    while (txbuf.size()) {
-        int ret = ::send(sockfd, (char*)&txbuf[0], txbuf.size(), 0);
-        if (false) { } // ??
-        else if (ret < 0 && (socketerrno == SOCKET_EWOULDBLOCK || socketerrno == SOCKET_EAGAIN_EINPROGRESS)) {
-            break;
-        }
-        else if (ret <= 0) {
-
-            //TODO
-            //closesocket(sockfd);
-            //readyState = CLOSED;
-            fputs(ret < 0 ? "Connection error!\n" : "Connection closed!\n", stderr);
-            break;
-        }
-        else {
-            txbuf.erase(txbuf.begin(), txbuf.begin() + ret);
-        }
-    }
+    socket.process();
+//    ssize_t n = read(sockfd, buffer, sizeof(buffer));
+//
+//    if (n < 0) {
+//        LOG("ERROR reading from socket");
+//        exit(1);
+//    }
+//
+//    if (n>0) {
+//        decode(buffer, (int) n);
+//    }
+//
+//    //Sending
+//    while (txbuf.size()) {
+//        int ret = ::send(sockfd, (char*)&txbuf[0], txbuf.size(), 0);
+//        if (false) { } // ??
+//        else if (ret < 0 && (socketerrno == SOCKET_EWOULDBLOCK || socketerrno == SOCKET_EAGAIN_EINPROGRESS)) {
+//            break;
+//        }
+//        else if (ret <= 0) {
+//
+//            //TODO
+//            //closesocket(sockfd);
+//            //readyState = CLOSED;
+//            fputs(ret < 0 ? "Connection error!\n" : "Connection closed!\n", stderr);
+//            break;
+//        }
+//        else {
+//            txbuf.erase(txbuf.begin(), txbuf.begin() + ret);
+//        }
+//    }
 }
 
 void WampTransportWS::sendMessage(char *buffer, size_t size) {
     const uint8_t masking_key[4] = { 0x12, 0x34, 0x56, 0x78 };
+    std::vector<uint8_t> txbuf;
     // TODO: consider acquiring a lock on txbuf...
     // TODO: check status
-    //if (readyState == CLOSING || readyState == CLOSED) { return; }
 
     wsheader_type::opcode_type type = wsheader_type::BINARY_FRAME;
 
@@ -248,6 +217,8 @@ void WampTransportWS::sendMessage(char *buffer, size_t size) {
     if (useMask) {
         for (size_t i = 0; i != size; ++i) { *(txbuf.end() - size + i) ^= masking_key[i&0x3]; }
     }
+
+    socket.send((char*)&txbuf[0], txbuf.size());
 }
 
 
@@ -277,7 +248,7 @@ int WampTransportWS::readLine(char *buffer, int size, std::string &s) {
 }
 
 
-void WampTransportWS::decode(char *buffer, int size) {
+void WampTransportWS::decode(char *buffer, const size_t &size) {
     static int mhLines = 0;
 
     if (upgraded) {
@@ -289,7 +260,7 @@ void WampTransportWS::decode(char *buffer, int size) {
         int ret = readLine(buffer, size, line);
 
         //Check if we have a complete line
-        if (line.back()='\n') {
+        if (line.back()=='\n') {
             mhLines++;
             LOG("Header Line of size:" <<line.length() << " : " << line);
 
@@ -318,7 +289,7 @@ void WampTransportWS::decode(char *buffer, int size) {
     }
 }
 
-void WampTransportWS::decodeWS(char *buffer, int size) {
+void WampTransportWS::decodeWS(char *buffer, const size_t &size) {
     size_t N = rxbuf.size();
     rxbuf.resize(N+size);
     memcpy((char*)&rxbuf[0]+N, buffer, (size_t) size);
@@ -411,3 +382,46 @@ void WampTransportWS::decodeWS(char *buffer, int size) {
 
 }
 
+WampTransportWS::WampTransportWS(const std::string &url, const string &origin):url(url),origin(origin) {
+    socket.onError = [this](spal::error serr) {
+        this->onError(serr);
+    };
+
+    socket.onSocketConnect =[this]() {
+        this->onSocketConnect();
+    };
+
+    socket.onReadable =[this]() {
+        this->onReadable();
+    };
+
+    socket.onDisconnect=[this]() {
+        this->onDisconnect();
+    };
+}
+
+void WampTransportWS::onError(spal::error serr) {
+    LOG("ERROR "<< spal::getError(serr));
+    onDisconnect();
+
+}
+
+void WampTransportWS::onSocketConnect() {
+    handshake();
+}
+
+void WampTransportWS::onReadable() {
+    _bpos = sizeof(buffer);
+    /* Read data out of the socket */
+    socket.read(buffer, _bpos);
+
+    //LOG("Going to decode " <<_bpos);
+
+    if (_bpos>0 )
+        decode(buffer, _bpos);
+}
+
+
+void WampTransportWS::onDisconnect() {
+
+}

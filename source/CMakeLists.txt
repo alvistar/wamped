@@ -2,7 +2,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-literal-suffix")
 include_directories(../mpack/src)
 
 LIST(APPEND SOURCES MsgPackCPP.cpp MsgUnpack.cpp MpackPrinter.cpp
-        WampMBED.cpp WampTransportRaw.cpp SocketTypes.cpp)
+        WampMBED.cpp
+        WampTransportWS.cpp
+        WampTransportRaw.cpp
+        SocketTypes.cpp)
 LIST(APPEND LIBRARIES mpack)
 
 if(YOTTA_CFG_MBED)
@@ -11,7 +14,7 @@ if(YOTTA_CFG_MBED)
     add_executable(wamp WampMBEDMain.cpp ${SOURCES})
 
 else(YOTTA_CFG_MBED) #Not MBED
-    LIST(APPEND SOURCES WampTransportWS.cpp SocketOSX.cpp)
+    LIST(APPEND SOURCES SocketOSX.cpp)
     add_executable(msgpack_test mpacktest.cpp MsgPackCPP.cpp MsgUnpack.cpp MpackPrinter.cpp)
     add_executable(transport_test WSTransportTest.cpp WampTransportWS.cpp)
     target_link_libraries(msgpack_test mpack)
