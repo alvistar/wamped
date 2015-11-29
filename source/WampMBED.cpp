@@ -36,6 +36,10 @@ WampMBED::WampMBED(WampTransport &transport):transport(transport) {
     };
 }
 
+void WampMBED::connect() {
+    transport.connect();
+}
+
 void WampMBED::connect(std::function<void()> onJoin) {
     this->onJoin = onJoin;
 
@@ -226,5 +230,6 @@ void WampMBED::close() {
     connected = false;
     subscriptionsRequests.clear();
     subscriptions.clear();
-    onClose();
+    if (onClose)
+        onClose();
 }

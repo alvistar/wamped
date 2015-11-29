@@ -3,7 +3,7 @@
 #include "logger.h"
 #include "MpackPrinter.h"
 #include "mbed-drivers/mbed.h"
-#include "WampTransportRawMBED.h"
+#include "WampTransportRaw.h"
 
 WampTransportRaw *wt;
 WampMBED *wamp;
@@ -45,7 +45,7 @@ void app_start(int, char**) {
 
     std::cout << "Hello world!\n";
 
-    wt = new WampTransportRaw {};
+    wt = new WampTransportRaw {"192.168.20.192"};
     wamp = new WampMBED (*wt);
 
     wamp->connect([&]() {

@@ -34,6 +34,7 @@ public:
     std::function<void()> onClose {nullptr};
 
     WampMBED(WampTransport &transport);
+    void connect();
     void connect(std::function<void()> onJoin);
     void connect(std::function<void()> onJoin, std::function<void()> onError);
     void close();

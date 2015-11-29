@@ -156,7 +156,7 @@ void WampTransportWS::handshake() {
     snprintf(line, 256, "\r\n"); ::send(sockfd, line, strlen(line), 0);
 }
 
-int WampTransportWS::process() {
+void WampTransportWS::process() {
     ssize_t n = read(sockfd, buffer, sizeof(buffer));
 
     if (n < 0) {
@@ -187,8 +187,6 @@ int WampTransportWS::process() {
             txbuf.erase(txbuf.begin(), txbuf.begin() + ret);
         }
     }
-
-    return 1;
 }
 
 void WampTransportWS::sendMessage(char *buffer, size_t size) {

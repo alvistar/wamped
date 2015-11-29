@@ -6,10 +6,10 @@
 #include "WampTransportWS.h"
 #include "MsgUnpack.h"
 
-WampTransportWS *wt;
+WampTransportRaw *wt;
 WampMBED *wamp;
 
-static void blinky(void) {
+void onConnect() {
 
 }
 
@@ -18,8 +18,14 @@ int main() {
 
     std::cout << "Hello world!\n";
 
-    wt = new WampTransportWS {"ws://localhost:8081"};
+    wt = new WampTransportRaw {"localhost"};
     wamp = new WampMBED (*wt);
+
+    wamp->onClose = ([&]() {
+        LOG("Reconnecting");
+        sleep(1);
+        wamp->connect();
+    });
 
     wamp->connect([&]() {
         LOG("Session joined :" << wamp->sessionID);
@@ -28,13 +34,13 @@ int main() {
 
         wamp->subscribe("com.example.oncounter", [](mpack_node_t &args, mpack_node_t &kwargs) {
             LOG("Received event: " << MpackPrinter(args).toJSON());
-            blinky();
         });
     });
 
-    int n=0;
-    while (n>=0) {
-        n= wt->process();
+
+
+    while (true) {
+        wt->process();
     }
 
 }

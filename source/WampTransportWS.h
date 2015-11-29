@@ -36,7 +36,7 @@ public:
     WampTransportWS(const std::string& url, const std::string& origin=std::string()):
             url(url),origin(origin) {};
     void connect() override ;
-    int process() override;
+    void process() override;
     void sendMessage(char* buffer, size_t size) override;
 
 

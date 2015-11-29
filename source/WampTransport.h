@@ -24,7 +24,7 @@ public:
     function<void(char*, size_t)> onMessageBin = nullptr;
     function<void()> onClose = nullptr;
 
-    virtual int process() = 0;
+    virtual void process() = 0;
     virtual void sendMessage(string &msg) {
     	(void) msg;
     };
@@ -39,7 +39,7 @@ public:
     function<void(WampConn&)> onlose = nullptr;
     function<void(WampConn&, string)> onMessage = nullptr;
 
-    virtual int process() = 0;
+    virtual void process() = 0;
     virtual void sendMessage(WampConn &conn, string &msg) = 0;
     virtual int start() =0;
 
