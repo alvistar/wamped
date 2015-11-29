@@ -35,6 +35,7 @@ int main() {
         wamp->publish("test", MsgPackArr {"hello"}, MsgPackMap {});
 
         wamp->subscribe("com.example.oncounter", [](mpack_node_t &args, mpack_node_t &kwargs) {
+            (void) kwargs;
             LOG("Received event: " << MpackPrinter(args).toJSON());
         });
     });

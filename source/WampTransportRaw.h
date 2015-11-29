@@ -43,11 +43,7 @@ private:
     uint16_t port;
     //char buffer[BUFFERSIZE];
     char message[MAXMESSAGESIZE];
-    bool handshaken = false;
     SocketPAL socket;
-
-
-    volatile bool _error;
     char _buffer[RECV_BUFFER_SIZE];
     size_t _bpos;                   /**< The current offset in the response buffer */
     stateT state = WAITHANDSHAKE;

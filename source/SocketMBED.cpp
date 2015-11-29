@@ -2,7 +2,7 @@
 #include "SocketMBED.h"
 #include "sal-stack-lwip/lwipv4_init.h"
 
-//#define DEBUG_WAMP_SOCKET
+#define DEBUG_WAMP_SOCKET
 
 #ifdef DEBUG_WAMP_SOCKET
 #include "logger.h"
@@ -117,7 +117,9 @@ void SocketPAL::_onSent(Socket *s, uint16_t nbytes) {
 }
 
 void SocketPAL::_onDisconnect(TCPStream *s) {
+    (void) s;
     close();
+
 }
 
 void SocketPAL::process() {
@@ -125,6 +127,7 @@ void SocketPAL::process() {
 }
 
 void SocketPAL::close() {
+    LOG("Socket disconnected");
     _socket->close();
     onDisconnect();
 }

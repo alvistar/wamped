@@ -75,7 +75,7 @@ void app_start(int, char**) {
     button.rise (pressed);
 
     wamp->onClose = [&]() {
-        //NVIC_SystemReset();
+        NVIC_SystemReset();
     };
 
 }

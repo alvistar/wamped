@@ -36,7 +36,7 @@ class WampTransportServer {
 
 public:
     function<void(WampConn&)> onConnect = nullptr;
-    function<void(WampConn&)> onlose = nullptr;
+    function<void(WampConn&)> onClose = nullptr;
     function<void(WampConn&, string)> onMessage = nullptr;
 
     virtual void process() = 0;

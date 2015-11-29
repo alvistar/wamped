@@ -5,6 +5,7 @@
 #include "WampTransportWS.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define DEBUG_WAMP_TRANSPORT
 
@@ -94,8 +95,6 @@ void WampTransportWS::connect() {
 
 void WampTransportWS::handshake() {
     char line[256];
-    int status;
-    int i;
     snprintf(line, 256, "GET /%s HTTP/1.1\r\n", path);
     socket.send(line, strlen(line));
     if (port == 80) {
@@ -126,36 +125,6 @@ void WampTransportWS::handshake() {
 
 void WampTransportWS::process() {
     socket.process();
-//    ssize_t n = read(sockfd, buffer, sizeof(buffer));
-//
-//    if (n < 0) {
-//        LOG("ERROR reading from socket");
-//        exit(1);
-//    }
-//
-//    if (n>0) {
-//        decode(buffer, (int) n);
-//    }
-//
-//    //Sending
-//    while (txbuf.size()) {
-//        int ret = ::send(sockfd, (char*)&txbuf[0], txbuf.size(), 0);
-//        if (false) { } // ??
-//        else if (ret < 0 && (socketerrno == SOCKET_EWOULDBLOCK || socketerrno == SOCKET_EAGAIN_EINPROGRESS)) {
-//            break;
-//        }
-//        else if (ret <= 0) {
-//
-//            //TODO
-//            //closesocket(sockfd);
-//            //readyState = CLOSED;
-//            fputs(ret < 0 ? "Connection error!\n" : "Connection closed!\n", stderr);
-//            break;
-//        }
-//        else {
-//            txbuf.erase(txbuf.begin(), txbuf.begin() + ret);
-//        }
-//    }
 }
 
 void WampTransportWS::sendMessage(char *buffer, size_t size) {
@@ -169,8 +138,7 @@ void WampTransportWS::sendMessage(char *buffer, size_t size) {
     std::vector<uint8_t> header;
     header.assign(2 + (size >= 126 ? 2 : 0) + (size >= 65536 ? 6 : 0) + (useMask ? 4 : 0), 0);
     header[0] = 0x80 | type;
-    if (false) { }
-    else if (size < 126) {
+    if (size < 126) {
         header[1] = (size & 0xff) | (useMask ? 0x80 : 0);
         if (useMask) {
             header[2] = masking_key[0];
@@ -190,6 +158,9 @@ void WampTransportWS::sendMessage(char *buffer, size_t size) {
             header[7] = masking_key[3];
         }
     }
+
+//TODO Big Buffer
+#ifndef YOTTA_CFG_MBED
     else { // TODO: run coverage testing here
         header[1] = 127 | (useMask ? 0x80 : 0);
         header[2] = (size >> 56) & 0xff;
@@ -207,6 +178,7 @@ void WampTransportWS::sendMessage(char *buffer, size_t size) {
             header[13] = masking_key[3];
         }
     }
+#endif
     // N.B. - txbuf will keep growing until it can be transmitted over the socket:
     txbuf.insert(txbuf.end(), header.begin(), header.end());
 
@@ -283,7 +255,7 @@ void WampTransportWS::decode(char *buffer, const size_t &size) {
 
         }
 
-        if (ret < size) {
+        if (ret < (int) size) {
             decode(&buffer[ret], size - ret);
         }
     }
@@ -423,5 +395,5 @@ void WampTransportWS::onReadable() {
 
 
 void WampTransportWS::onDisconnect() {
-
+    onClose();
 }
