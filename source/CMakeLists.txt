@@ -2,7 +2,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 include_directories(../mpack/src)
 
 LIST(APPEND SOURCES MsgPackCPP.cpp MsgUnpack.cpp MpackPrinter.cpp
-        WampMBED.cpp
+        Wamp.cpp
         WampTransportWS.cpp
         WampTransportRaw.cpp
         SocketTypes.cpp)

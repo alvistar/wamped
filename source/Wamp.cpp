@@ -2,17 +2,17 @@
 // Created by Alessandro Viganò on 16/11/15.
 //
 
-#define DEBUGWAMP
-
 #include <random>
 #include <iostream>
-#include "WampMBED.h"
+#include "Wamp.h"
 #include "WampTransport.h"
 #include "wampConstants.h"
 
 #include "MsgUnpack.h"
 
-#ifdef DEBUGWAMP
+#include "LogConfig.h"
+
+#ifdef DEBUG_WAMP
 #include "logger.h"
 #else
 #define LOG(X)
@@ -132,15 +132,38 @@ void WampMBED::publish(string const &topic, const MsgPack& arguments, const MsgP
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
+void WampMBED::call(string const &procedure, const MsgPack &arguments, const MsgPack &argumentsKW, TCallCallback cb) {
+    if (!connected)
+        return;
+
+    callRequests[requestCount] = cb;
+
+    mp.clear();
+    mp.pack_array(6);
+    mp.pack((int) WAMP_MSG_CALL);
+    mp.pack(requestCount);
+    mp.pack_map(0);
+    mp.pack(procedure);
+    mp.pack(arguments);
+    mp.pack(argumentsKW);
+
+    LOG ("Calling " << procedure << "- " << mp.getJson());
+
+    requestCount++;
+
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+}
+
 void WampMBED::parseMessage(char* buffer, size_t size) {
 
     int msgType = 0;
 
     MsgUnpack munp(buffer,size);
-    mpack_node_t root = munp.getRoot();
-    LOG ("Received msg "<< munp.toJson());
+    MPNode root = munp.getRoot();
+    LOG ("Received msg "<< root.toJson());
 
-    msgType = mpack_node_u16(mpack_node_array_at(root,0));
+    //msgType = mpack_node_u16(mpack_node_array_at(root,0));
+    msgType = root[0];
 
     if (munp.getError() != mpack_ok) {
         LOG ("Unknown msg");
@@ -150,15 +173,16 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
     LOG ("Msg type:" << msgType);
     switch (msgType) {
         case WAMP_MSG_WELCOME: {
-            sessionID = mpack_node_u64(mpack_node_array_at(root,1));
+            //sessionID = mpack_node_u64(mpack_node_array_at(root,1));
+            sessionID = root[1];
             LOG ("Received welcome message with SessionID " << sessionID);
             connected = true;
             onJoin();
             break;
         }
         case WAMP_MSG_SUBSCRIBED: {
-            unsigned long long int requestID = mpack_node_u64(mpack_node_array_at(root,1));
-            unsigned long long int subscriptionID = mpack_node_u64(mpack_node_array_at(root,2));
+            WampID_t requestID = root[1];
+            WampID_t subscriptionID = root[2];
 
             if (munp.getError() != mpack_ok) {
                 LOG ("Bad Subscribe Message");
@@ -182,31 +206,15 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
 
         case WAMP_MSG_EVENT: {
 
-            unsigned long long int subscriptionID = mpack_node_u64(mpack_node_array_at(root,1));
+            WampID_t subscriptionID = root[1];
 
             if (munp.getError() != mpack_ok) {
                 LOG ("Bad EVENT Message");
                 return;
             }
 
-            mpack_node_t args;
-            mpack_node_t kwargs;
-
-            if (mpack_node_array_length(root) >4) {
-                args = mpack_node_array_at(root, 4);
-            }
-            else {
-                args.data = nullptr;
-                args.tree = nullptr;
-            }
-
-            if (mpack_node_array_length(root) >5) {
-               kwargs = mpack_node_array_at(root, 5);
-            }
-            else {
-                kwargs.data = nullptr;
-                kwargs.tree = nullptr;
-            }
+            MPNode args = root.at(4, true);
+            MPNode kwargs = root.at(5, true);
 
             LOG ("Received EVENT message with SubscriptionID " << subscriptionID);
 
@@ -222,6 +230,63 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
             break;
         }
 
+        case WAMP_MSG_RESULT:
+        {
+            WampID_t requestID = root[1];
+            if (munp.getError() != mpack_ok) {
+                LOG ("Bad RESULT Message");
+                return;
+            }
+
+            MPNode args = root.at(3, true);
+            MPNode kwargs = root.at(4, true);
+
+
+            LOG ("Received RESULT message with requestID " << requestID);
+
+            if (callRequests.find(requestID) == callRequests.end()) {
+                LOG ("RequestID not found - # Subscriptions" << subscriptions.size());
+                return;
+            }
+
+            TCallCallback cb = callRequests.at(requestID);
+            cb(nullptr, args, kwargs);
+
+            break;
+        }
+
+        case WAMP_MSG_ERROR: {
+            u_int16_t errMsg = root[1];
+
+            switch (errMsg) {
+                case WAMP_MSG_CALL: {
+                    std::string err = root[4];
+                    WampID_t callRequest = root[2];
+
+                    if (munp.getError() != mpack_ok) {
+                        LOG ("Bad ERROR Message");
+                        return;
+                    }
+
+                    if (callRequests.find(callRequest) == callRequests.end()) {
+                        LOG ("RequestID not found - # CallRequests" << callRequests.size());
+                        return;
+                    }
+
+                    LOG("Received error for CALL request "<< callRequest);
+                    TCallCallback cb = callRequests.at(callRequest);
+                    callRequests.erase(callRequest);
+                    WampError e {err};
+                    cb(&e, munp.nil(), munp.nil());
+                    break;
+
+                }
+                default:
+                    LOG("Uknown erorr");
+            }
+        }
+
+
     }
 }
 
@@ -233,3 +298,5 @@ void WampMBED::close() {
     if (onClose)
         onClose();
 }
+
+

@@ -10,9 +10,16 @@
 #include "WampTransport.h"
 #include "MsgPackCPP.h"
 #include "mpack/mpack.h"
+#include "MsgUnpack.h"
 
-typedef unsigned long long int WampID;
-typedef function<void(mpack_node_t &, mpack_node_t &)> TSubscriptionCallback;
+struct WampError {
+    string URI;
+};
+
+typedef unsigned long long int WampID_t;
+typedef function<void(MPNode,  MPNode)> TSubscriptionCallback;
+typedef function<void(WampError *error, MPNode, MPNode)> TCallCallback;
+
 
 class WampMBED {
 private:
@@ -20,8 +27,9 @@ private:
     std::random_device rd;
     std::mt19937_64 gen;
     MsgPack mp;
-    unordered_map <WampID, TSubscriptionCallback> subscriptionsRequests;
-    unordered_map <WampID, TSubscriptionCallback> subscriptions;
+    unordered_map <WampID_t, TSubscriptionCallback> subscriptionsRequests;
+    unordered_map <WampID_t, TSubscriptionCallback> subscriptions;
+    unordered_map <WampID_t, TCallCallback> callRequests;
     unsigned long long int requestCount = 0;
 
     std::function<void()> onJoin {nullptr};
@@ -29,7 +37,7 @@ private:
 
 
 public:
-    WampID sessionID;
+    WampID_t sessionID;
     bool connected {false};
     std::function<void()> onClose {nullptr};
 
@@ -43,7 +51,8 @@ public:
     void subscribe(string topic, TSubscriptionCallback callback);
     void publish(string const &topic);
     void publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW);
-
+    void call(string const &procedure, const MsgPack& arguments,
+              const MsgPack& argumentsKW, TCallCallback cb);
 
     void parseMessage(char *buffer, size_t size);
 

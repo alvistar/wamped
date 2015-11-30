@@ -5,7 +5,7 @@
 #include <math.h>
 #include "WampTransportRaw.h"
 
-#define DEBUG_WAMP_TRANSPORT
+#include "LogConfig.h"
 
 #ifdef DEBUG_WAMP_TRANSPORT
 #include "logger.h"
@@ -202,6 +202,9 @@ void WampTransportRaw::onDisconnect() {
 }
 
 void WampTransportRaw::onError(spal::error serr) {
+#ifndef DEBUG_WAMP_TRANSPORT
+    (void) serr;
+#endif
     LOG("ERROR "<< spal::getError(serr));
     onDisconnect();
 }

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DEBUG_WAMP_TRANSPORT
+#include "LogConfig.h"
 
 #ifdef DEBUG_WAMP_TRANSPORT
 #include "logger.h"
@@ -373,7 +373,11 @@ WampTransportWS::WampTransportWS(const std::string &url, const string &origin):u
 }
 
 void WampTransportWS::onError(spal::error serr) {
+#ifndef DEBUG_WAMP_TRANSPORT
+    (void) serr;
+#endif
     LOG("ERROR "<< spal::getError(serr));
+
     onDisconnect();
 
 }

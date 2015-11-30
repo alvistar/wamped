@@ -1,5 +1,5 @@
 #include <iostream>
-#include "WampMBED.h"
+#include "Wamp.h"
 #include "logger.h"
 #include "MpackPrinter.h"
 #include "WampTransportRaw.h"
@@ -34,10 +34,19 @@ int main() {
 
         wamp->publish("test", MsgPackArr {"hello"}, MsgPackMap {});
 
-        wamp->subscribe("com.example.oncounter", [](mpack_node_t &args, mpack_node_t &kwargs) {
+        wamp->subscribe("com.example.oncounter", [](MPNode args, MPNode kwargs) {
             (void) kwargs;
-            LOG("Received event: " << MpackPrinter(args).toJSON());
+            LOG("Received event: " << args.toJson());
         });
+
+        wamp->call("com.example.add", MsgPackArr {20,3}, MsgPackMap{},
+                   [](WampError *err, MPNode args, MPNode kwargs) {
+            if (!err) {
+                LOG("Received result:" << args.toJson());
+            }
+
+        });
+
     });
 
 

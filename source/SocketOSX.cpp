@@ -6,9 +6,9 @@
 #include "SocketOSX.h"
 #include <netdb.h>
 #include <stdlib.h>
+#include <sys/errno.h>
 
-#define DEBUG_WAMP_SOCKET
-
+#include "LogConfig.h"
 #ifdef DEBUG_WAMP_SOCKET
 #include "logger.h"
 #else

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "WampMBED.h"
+#include "Wamp.h"
 #include "logger.h"
 #include "MpackPrinter.h"
 #include "mbed-drivers/mbed.h"

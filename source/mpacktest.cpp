@@ -1,6 +1,8 @@
 #include "mpack/mpack.h"
 #include "MsgPackCPP.h"
+#include "MsgUnpack.h"
 #include "logger.h"
+#include <iostream>
 
 int main() {
     MsgPack mp;
@@ -25,9 +27,17 @@ int main() {
 
     mp2.print();
 
-    MsgPackArr mp3 {"gattina"};
+    MsgPackArr mp3 {"gatto","cane","pesce"};
     mp3.print();
 
     MsgPackMap mp4 {"colore","rosso","pesce","spigola"};
     mp4.print();
+
+    MsgUnpack munp(mp3.getData(),mp3.getUsedBuffer());
+    MPNode root = munp.getRoot();
+
+
+    std::cout << root.toJson() << ":" << (std::string) root[1];
+
+
 }

@@ -56,6 +56,6 @@ void MsgPack::pack(MsgPack mp) {
 
 std::string MsgPack::getJson() {
     MsgUnpack unp {getData(), getUsedBuffer()};
-    return unp.toJson();
+    return unp.getRoot().toJson();
 }
 
