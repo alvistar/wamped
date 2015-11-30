@@ -148,6 +148,39 @@ void WampMBED::call(string const &procedure, const MsgPack &arguments, const Msg
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
+void WampMBED::yield(const WampID_t &invocationID, const MsgPack &arguments, const MsgPack &argumentsKW) {
+    mp.clear();
+    mp.pack_array(5);
+    mp.pack((int) WAMP_MSG_YIELD);
+    mp.pack(invocationID);
+    mp.pack_map(0);
+    mp.pack(arguments);
+    mp.pack(argumentsKW);
+
+    LOG ("Yielding  " << mp.getJson());
+
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+}
+
+void WampMBED::sendError(const enum wamp_messages &msgType, const std::string &errorURI, const WampID_t &requestID,
+                         const MsgPack &details, const MsgPack &arguments= MsgPackArr(), const MsgPack &argumentsKW = MsgPackMap()) {
+
+    mp.clear();
+    mp.pack_array(7);
+    mp.pack((int) WAMP_MSG_ERROR);
+    mp.pack((int) msgType);
+    mp.pack(requestID),
+    mp.pack(details);
+    mp.pack(errorURI);
+    mp.pack(arguments);
+    mp.pack(argumentsKW);
+
+    LOG ("sending error  " << mp.getJson());
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+
+}
+
+
 void WampMBED::parseMessage(char* buffer, size_t size) {
 
     int msgType = 0;
@@ -197,6 +230,78 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
 
             break;
         }
+
+        case WAMP_MSG_REGISTERED: {
+            WampID_t requestID = root[1];
+            WampID_t registrationID = root[2];
+
+            if (munp.getError() != mpack_ok) {
+                LOG ("Bad Subscribe Message");
+                return;
+            }
+
+            LOG("Received Registered message with RegistrationID " << registrationID);
+
+            if (registrationsRequests.find(requestID) == registrationsRequests.end()) {
+                LOG ("SubscriptionRequest not found");
+                return;
+            }
+
+            auto procedure = registrationsRequests.at(requestID);
+            registrations[registrationID] = procedure;
+            registrationsRequests.erase(requestID);
+            LOG("Active registrations " << registrations.size());
+
+            break;
+
+        };
+
+        case WAMP_MSG_INVOCATION: {
+            WampID_t requestID = root[1];
+            WampID_t registrationID = root[2];
+
+            if (munp.getError() != mpack_ok) {
+                LOG ("Bad Invocation Message");
+                return;
+            }
+
+            MPNode args = root.at(4, true);
+            MPNode kwargs = root.at(5, true);
+
+            LOG("Received INVOCATION message");
+
+            if (registrations.find(registrationID) == registrations.end()) {
+                LOG ("Registration not found");
+                return;
+            }
+
+            auto procedure = registrations.at(registrationID);
+
+            if (!procedure->check(args)) {
+                sendError(WAMP_MSG_INVOCATION, "wamp.error.invalid_argument", requestID, MsgPackMap());
+                return;
+            }
+            MsgPack result = procedure->invoke(args);
+
+            LOG("Result:" << result.getJson());
+            yield(requestID, MsgPackArr {result}, MsgPackMap {});
+//
+//                try {
+//
+//                    yield(requestID, WSArrayM {result});
+//                }
+//                catch (WampException &e) {
+//                    LOG_(ERROR) << e.what();
+//                    WSDictM details {};
+//                    error(WAMP_MSG_INVOCATION,"wamp.error.invalid_argument", requestID, details);
+//                }
+//            }
+//            catch (out_of_range) {
+//                LOG_(DEBUG) << "RegistrationID not found";
+//            }
+
+            break;
+        };
 
         case WAMP_MSG_EVENT: {
 
@@ -292,5 +397,6 @@ void WampMBED::close() {
     if (onClose)
         onClose();
 }
+
 
 

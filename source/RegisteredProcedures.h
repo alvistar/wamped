@@ -6,10 +6,12 @@
 #include "MsgUnpack.h"
 #include "MsgPackCPP.h"
 #include <functional>
+#include <iostream>
 //#include "alvistar/lserializer/WSArray.h"
 
 #ifndef CPPWAMP_REGISTEREDPROCEDURES_H
 #define CPPWAMP_REGISTEREDPROCEDURES_H
+
 
 class WampException: public std::exception {
 private:
@@ -41,55 +43,68 @@ struct build_indices<0> {
 template <std::size_t N>
 using BuildIndices = typename build_indices<N>::type;
 
-template <typename ret, size_t num_args>
+template <typename ...ARGS>
+void checkParameters (ARGS...) {
+
+}
+
+template <typename ret, typename ...ARGS>
 class unpack_caller
 {
 private:
+    template <size_t... I>
+    int _check (MPNode& arr, indices<I...>) {
+        checkParameters<ARGS...>(arr.at(I)...);
+        return arr.getError();
+    }
+
     template <typename FuncType, size_t... I>
     auto call(FuncType &f, MPNode& arr, indices<I...>) -> ret
     {
+
         auto res = f(arr.at(I)...);
         return res;
     }
 
 public:
+
     template <typename FuncType>
     auto operator () (FuncType &f, MPNode& arr)
     -> ret
     {
+        return call(f, arr, BuildIndices<sizeof... (ARGS)>{});
+    }
 
-        //TODO
-
-//        if (arr.size() != num_args) {
-//                throw (WampException("Wrong Number of Parameters"));
-//        }
-
-        return call(f, arr, BuildIndices<num_args>{});
+    int check(MPNode& arr) {
+        return _check(arr, BuildIndices<sizeof... (ARGS)>{});
     }
 };
+
+
 
 //Specialization for void
-template <size_t num_args>
-class unpack_caller<void, num_args>
-{
-private:
-    template <typename FuncType, size_t... I>
-    void call(FuncType &f, MPNode arr, indices<I...>)
-    {
-        f(arr.at(I)...);
-    }
-
-public:
-    template <typename FuncType>
-    void operator () (FuncType &f, MPNode arr)
-    {
-        //TODO
-//        if (arr.size() != num_args) {
-//            throw (WampException("Wrong Number of Parameters"));
-//        }
-        call(f, arr, BuildIndices<num_args>{});
-    }
-};
+//TODO
+//template <typename ...ARGS>
+//class unpack_caller<void, ARGS>
+//{
+//private:
+//    template <typename FuncType, size_t... I>
+//    void call(FuncType &f, MPNode arr, indices<I...>)
+//    {
+//        f(arr.at(I)...);
+//    }
+//
+//public:
+//    template <typename FuncType>
+//    void operator () (FuncType &f, MPNode arr)
+//    {
+//        //TODO
+////        if (arr.size() != num_args) {
+////            throw (WampException("Wrong Number of Parameters"));
+////        }
+//        call(f, arr, BuildIndices<num_args>{});
+//    }
+//};
 
 
 //--------------------
@@ -99,6 +114,7 @@ public:
 class RegisteredProcedureBase {
 public:
     virtual MsgPack invoke(MPNode arr)= 0;
+    virtual int check (MPNode arr) = 0;
 };
 
 template <typename R, typename ...ARGS>
@@ -108,17 +124,25 @@ private:
     FUNC f;
 public:
     RegisteredProcedure(FUNC f):f(f) {};
-    virtual MsgPack invoke(MPNode arr) override {
-        MsgPack ret;
 
-        ret = unpack_caller<R, sizeof...(ARGS)>()(f, arr);
-        //TODO
-//        catch (WSException& e) {
-//            LOG(ERROR) << e.what();
-//            throw(WampException("Wrong type of parameters"));
-//        }
-        return ret;
+    virtual int check (MPNode arr) override {
+        if (sizeof ... (ARGS) != arr.arrayLength()) {
+            //Wrong number of arguments
+            return false;
+        }
+
+        if ( unpack_caller<void, ARGS...>().check(arr)) {
+            //Wrong type of arguments
+            //std::cout << "Wrong type of arguments " << std::endl;
+            return false;
+        }
     }
+
+    virtual MsgPack invoke(MPNode arr) override {
+        return (MsgPack) unpack_caller<R, ARGS...>{} (f,arr);
+    }
+
+
 };
 
 //Specialization for void
@@ -129,15 +153,23 @@ private:
     FUNC f;
 public:
     RegisteredProcedure(FUNC f):f(f) {};
+
+    virtual int check (MPNode arr) override {
+        if (sizeof ... (ARGS) != arr.arrayLength()) {
+            //Wrong number of arguments
+            return false;
+        }
+
+        if ( unpack_caller<void, ARGS...>().check(arr)) {
+            //Wrong type of arguments
+            //std::cout << "Wrong type of arguments " << std::endl;
+            return false;
+        }
+    }
+
     virtual MsgPack invoke(MPNode arr) override {
-        //MPNode ret;
-        unpack_caller<void, sizeof...(ARGS)>()(f, arr);
 
-        //TODO
-//        catch (WSException) {
-//            throw(WampException("Wrong type of parameters"));
-//        }
-
+        unpack_caller<void, ARGS...>{} ();
         return MsgPack();
     }
 };

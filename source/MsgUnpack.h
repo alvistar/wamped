@@ -20,6 +20,9 @@ public:
 
     MPNode operator[](const u_int16_t &index);
     MPNode at(const u_int16_t &index, bool ignore_errors=false);
+    mpack_error_t getError() {
+        return node.tree->error;
+    }
 
     size_t arrayLength ();
     std::string toJson();

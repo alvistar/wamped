@@ -14,6 +14,10 @@ void onConnect() {
 
 }
 
+int sum(int x, int y) {
+    return x+y;
+}
+
 
 int main() {
 
@@ -38,6 +42,8 @@ int main() {
             (void) kwargs;
             LOG("Received event: " << args.toJson());
         });
+
+        wamp->registerProcedure("com.mydevice.sum", sum);
 
         wamp->call("com.example.add", MsgPackArr {20,3}, MsgPackMap{},
                    [](WampError *err, MPNode args, MPNode kwargs) {

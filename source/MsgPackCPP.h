@@ -32,6 +32,10 @@ public:
         pack(i);
     }
 
+    MsgPack(std::string s):MsgPack() {
+        pack(s);
+    }
+
 
     void pack_array(uint32_t number);
     void pack_map(uint32_t n);

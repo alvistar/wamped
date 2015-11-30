@@ -41,11 +41,22 @@ private:
     unordered_map <WampID_t, TSubscriptionCallback> subscriptions;
     unordered_map <WampID_t, TCallCallback> callRequests;
     unordered_map <WampID_t, RegisteredProcedureBase*> registrationsRequests;
+    unordered_map <WampID, RegisteredProcedureBase*> registrations;
     unsigned long long int requestCount = 0;
-
     std::function<void()> onJoin {nullptr};
 
+    void hello(string realm);
 
+    void yield(const WampID_t& invocationID, const MsgPack& arguments,
+               const MsgPack& argumentsKW);
+
+    void sendError (const enum wamp_messages &msgType,
+                    const std::string &errorURI,
+                    const WampID_t &requestID,
+                    const MsgPack &details,
+                    const MsgPack &arguments,
+                    const MsgPack &argumentsKW
+    );
 
 public:
     WampID_t sessionID;
@@ -57,13 +68,14 @@ public:
     void connect(std::function<void()> onJoin);
     void connect(std::function<void()> onJoin, std::function<void()> onError);
     void close();
-
-    void hello(string realm);
     void subscribe(string topic, TSubscriptionCallback callback);
     void publish(string const &topic);
     void publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW);
     void call(string const &procedure, const MsgPack& arguments,
               const MsgPack& argumentsKW, TCallCallback cb);
+
+
+
 
     void parseMessage(char *buffer, size_t size);
 
