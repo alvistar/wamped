@@ -10,13 +10,7 @@
 
 #include "MsgUnpack.h"
 
-#include "LogConfig.h"
 
-#ifdef DEBUG_WAMP
-#include "logger.h"
-#else
-#define LOG(X)
-#endif
 
 WampMBED::WampMBED(WampTransport &transport):transport(transport) {
 

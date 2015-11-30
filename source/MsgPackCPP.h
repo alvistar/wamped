@@ -28,6 +28,9 @@ private:
     char data[1024];
 public:
     MsgPack();
+    MsgPack(int i):MsgPack() {
+        pack(i);
+    }
 
 
     void pack_array(uint32_t number);

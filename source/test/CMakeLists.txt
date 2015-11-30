@@ -1,0 +1,6 @@
+include_directories(..)
+add_executable(msgpack_test mpacktest.cpp ../MsgPackCPP.cpp ../MsgUnpack.cpp ../MpackPrinter.cpp)
+add_executable(transport_test WSTransportTest.cpp ../WampTransportWS.cpp)
+add_executable(register_test registerProcedureTest.cpp ../MsgPackCPP.cpp ../MsgUnpack.cpp ../MpackPrinter.cpp)
+target_link_libraries(msgpack_test mpack)
+target_link_libraries(register_test mpack)

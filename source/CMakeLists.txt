@@ -16,11 +16,8 @@ if(YOTTA_CFG_MBED)
 
 else(YOTTA_CFG_MBED) #Not MBED
     LIST(APPEND SOURCES SocketOSX.cpp)
-    add_executable(msgpack_test mpacktest.cpp MsgPackCPP.cpp MsgUnpack.cpp MpackPrinter.cpp)
-    add_executable(transport_test WSTransportTest.cpp WampTransportWS.cpp)
-    target_link_libraries(msgpack_test mpack)
-
     add_executable(wamp AppDesktop.cpp ${SOURCES})
+    add_subdirectory(test)
 endif(YOTTA_CFG_MBED)
 
 target_link_libraries(wamp ${LIBRARIES})
