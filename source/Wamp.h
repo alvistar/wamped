@@ -27,8 +27,8 @@ struct WampError {
 };
 
 typedef unsigned long long int WampID_t;
-typedef function<void(MPNode,  MPNode)> TSubscriptionCallback;
-typedef function<void(WampError *error, MPNode, MPNode)> TCallCallback;
+typedef function<void(const MPNode&,  const MPNode&)> TSubscriptionCallback;
+typedef function<void(WampError *error, const MPNode&, const MPNode&)> TCallCallback;
 
 
 class WampMBED {

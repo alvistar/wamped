@@ -5,6 +5,8 @@
 #include "mbed-drivers/mbed.h"
 #include "WampTransportRaw.h"
 #include "WampTransportWS.h"
+#include "MsgUnpack.h"
+#include "MsgPackCPP.h"
 
 //WampTransportRaw *wt;
 WampTransportWS *wt;
@@ -25,6 +27,21 @@ static void switchoff(void) {
     led = 1;
 }
 
+int switchColor(int color) {
+    static DigitalOut ledBlue(LED_BLUE);
+    static DigitalOut ledRed(LED_RED);
+
+    switch (color) {
+        case 1:
+            ledRed = 0;
+            ledBlue =1;
+            break;
+        default:
+            ledRed = 1;
+            ledBlue = 0;
+    }
+}
+
 static void pressed() {
 //    MsgPack args;
 
@@ -41,6 +58,10 @@ static void pressed() {
 
 }
 
+int sum (int x,int y) {
+    return x+y;
+}
+
 InterruptIn button(SW2);
 
 void app_start(int, char**) {
@@ -48,7 +69,7 @@ void app_start(int, char**) {
     std::cout << "Hello world!\n";
 
     //wt = new WampTransportRaw {"192.168.20.192"};
-    wt = new WampTransportWS {"ws://192.168.20.192:8081"};
+    wt = new WampTransportWS {"ws://demo.crossbar.io:8080"};
     wamp = new WampMBED (*wt);
 
     wamp->connect([&]() {
@@ -61,12 +82,15 @@ void app_start(int, char**) {
 //            blinky();
 //        });
 
-        wamp->subscribe("com.example.switchon",[](mpack_node_t &args, mpack_node_t &kwargs) {
+        //wamp->registerProcedure("com.freedom.sum",sum);
+        wamp->registerProcedure("com.freedom.switch",switchColor);
+
+        wamp->subscribe("com.example.switchon",[](MPNode args, MPNode kwargs) {
         	LOG("Received switchon");
         	switchon();
         });
 
-        wamp->subscribe("com.example.switchoff",[](mpack_node_t &args, mpack_node_t &kwargs) {
+        wamp->subscribe("com.example.switchoff",[](MPNode args, MPNode kwargs) {
             LOG("Received switchon");
             switchoff();
         });

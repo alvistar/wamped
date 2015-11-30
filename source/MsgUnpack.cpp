@@ -29,11 +29,11 @@ std::string MPNode::toJson() {
     return printer.toJSON();
 }
 
-MPNode MPNode::operator[](const u_int16_t &index) {
+MPNode MPNode::operator[](const uint16_t  &index) {
     return at(index);
 }
 
-MPNode MPNode::at(const u_int16_t &index, bool ignore_errors) {
+MPNode MPNode::at(const uint16_t  &index, bool ignore_errors) {
 
     if (mpack_node_error(node) != mpack_ok)
         return MPNode(mpack_tree_nil_node(node.tree));

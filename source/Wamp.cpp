@@ -355,7 +355,7 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
         }
 
         case WAMP_MSG_ERROR: {
-            u_int16_t errMsg = root[1];
+            uint16_t   errMsg = root[1];
 
             switch (errMsg) {
                 case WAMP_MSG_CALL: {

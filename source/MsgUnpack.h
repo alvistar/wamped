@@ -7,6 +7,7 @@
 
 
 #include <stddef.h>
+#include <stdint.h>
 #include "mpack/mpack-node.h"
 #include <string>
 
@@ -18,8 +19,8 @@ public:
     MPNode(mpack_node_t node):node(node){};
     MPNode();
 
-    MPNode operator[](const u_int16_t &index);
-    MPNode at(const u_int16_t &index, bool ignore_errors=false);
+    MPNode operator[](const uint16_t  &index);
+    MPNode at(const uint16_t   &index, bool ignore_errors=false);
     mpack_error_t getError() {
         return node.tree->error;
     }
@@ -33,7 +34,7 @@ public:
         return mpack_node_i16(node);
     }
 
-    operator u_int16_t () {
+    operator uint16_t  () {
         return mpack_node_u16(node);
     }
 
