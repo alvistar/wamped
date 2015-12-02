@@ -12,7 +12,7 @@
 
 
 
-WampMBED::WampMBED(WampTransport &transport):transport(transport) {
+Wamp::Wamp(WampTransport &transport): transport(transport) {
 
     gen = std::mt19937_64 (rd());
 
@@ -30,22 +30,22 @@ WampMBED::WampMBED(WampTransport &transport):transport(transport) {
     };
 }
 
-void WampMBED::connect() {
+void Wamp::connect() {
     transport.connect();
 }
 
-void WampMBED::connect(std::function<void()> onJoin) {
+void Wamp::connect(std::function<void()> onJoin) {
     this->onJoin = onJoin;
 
     transport.connect();
 }
 
-void WampMBED::connect(std::function<void()> onJoin, std::function<void()> onError) {
+void Wamp::connect(std::function<void()> onJoin, std::function<void()> onError) {
     transport.onConnectError = onError;
     connect (onJoin);
 }
 
-void WampMBED::hello(string realm) {
+void Wamp::hello(string realm) {
     mp.clear();
     mp.pack_array(3);
     mp.pack((int) WAMP_MSG_HELLO);
@@ -70,7 +70,7 @@ void WampMBED::hello(string realm) {
     //this->transport.sendMessage(msg);
 }
 
-void WampMBED::subscribe(string topic, TSubscriptionCallback callback) {
+void Wamp::subscribe(string topic, TSubscriptionCallback callback) {
     //unsigned long long int id = random();
 
     subscriptionsRequests[requestCount] = callback;
@@ -89,7 +89,7 @@ void WampMBED::subscribe(string topic, TSubscriptionCallback callback) {
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
-void WampMBED::publish(string const &topic) {
+void Wamp::publish(string const &topic) {
     if (!connected)
         return;
 
@@ -106,7 +106,7 @@ void WampMBED::publish(string const &topic) {
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 };
 
-void WampMBED::publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW) {
+void Wamp::publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW) {
     if (!connected)
         return;
 
@@ -126,7 +126,7 @@ void WampMBED::publish(string const &topic, const MsgPack& arguments, const MsgP
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
-void WampMBED::call(string const &procedure, const MsgPack &arguments, const MsgPack &argumentsKW, TCallCallback cb) {
+void Wamp::call(string const &procedure, const MsgPack &arguments, const MsgPack &argumentsKW, TCallCallback cb) {
     if (!connected)
         return;
 
@@ -148,7 +148,7 @@ void WampMBED::call(string const &procedure, const MsgPack &arguments, const Msg
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
-void WampMBED::yield(const WampID_t &invocationID, const MsgPack &arguments, const MsgPack &argumentsKW) {
+void Wamp::yield(const WampID_t &invocationID, const MsgPack &arguments, const MsgPack &argumentsKW) {
     mp.clear();
     mp.pack_array(5);
     mp.pack((int) WAMP_MSG_YIELD);
@@ -162,8 +162,8 @@ void WampMBED::yield(const WampID_t &invocationID, const MsgPack &arguments, con
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
-void WampMBED::sendError(const enum wamp_messages &msgType, const std::string &errorURI, const WampID_t &requestID,
-                         const MsgPack &details, const MsgPack &arguments= MsgPackArr(), const MsgPack &argumentsKW = MsgPackMap()) {
+void Wamp::sendError(const enum wamp_messages &msgType, const std::string &errorURI, const WampID_t &requestID,
+                     const MsgPack &details, const MsgPack &arguments= MsgPackArr(), const MsgPack &argumentsKW = MsgPackMap()) {
 
     mp.clear();
     mp.pack_array(7);
@@ -181,7 +181,7 @@ void WampMBED::sendError(const enum wamp_messages &msgType, const std::string &e
 }
 
 
-void WampMBED::parseMessage(char* buffer, size_t size) {
+void Wamp::parseMessage(char* buffer, size_t size) {
 
     int msgType = 0;
 
@@ -389,7 +389,7 @@ void WampMBED::parseMessage(char* buffer, size_t size) {
     }
 }
 
-void WampMBED::close() {
+void Wamp::close() {
     LOG("Wamp Closed Connection");
     connected = false;
     subscriptionsRequests.clear();

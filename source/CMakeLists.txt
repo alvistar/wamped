@@ -10,7 +10,7 @@ LIST(APPEND LIBRARIES mpack)
 
 if(YOTTA_CFG_MBED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-literal-suffix")
-    LIST(APPEND SOURCES SocketMBED.cpp)
+    LIST(APPEND SOURCES SocketMBED.cpp Accelerometer/FXOS8700Q.cpp)
     LIST(APPEND LIBRARIES mbed-drivers sockets)
     add_executable(wamp WampMBEDMain.cpp ${SOURCES})
 

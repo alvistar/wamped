@@ -31,7 +31,7 @@ typedef function<void(const MPNode&,  const MPNode&)> TSubscriptionCallback;
 typedef function<void(WampError *error, const MPNode&, const MPNode&)> TCallCallback;
 
 
-class WampMBED {
+class Wamp {
 private:
     WampTransport &transport;
     std::random_device rd;
@@ -63,7 +63,7 @@ public:
     bool connected {false};
     std::function<void()> onClose {nullptr};
 
-    WampMBED(WampTransport &transport);
+    Wamp(WampTransport &transport);
     void connect();
     void connect(std::function<void()> onJoin);
     void connect(std::function<void()> onJoin, std::function<void()> onError);
@@ -71,13 +71,30 @@ public:
     void subscribe(string topic, TSubscriptionCallback callback);
     void publish(string const &topic);
     void publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW);
+
     void call(string const &procedure, const MsgPack& arguments,
               const MsgPack& argumentsKW, TCallCallback cb);
-
-
-
-
     void parseMessage(char *buffer, size_t size);
+
+    template <typename ...ARGS>
+    void pub(string const &topic, ARGS&& ... args) {
+        if (!connected)
+            return;
+
+        mp.clear();
+        mp.pack_array(5);
+        mp.pack((int) WAMP_MSG_PUBLISH);
+        mp.pack(requestCount);
+        mp.pack_map(0);
+        mp.pack(topic);
+        mp.packArray(std::forward<ARGS>(args)...);
+
+        LOG ("Publishing to " << topic << "- " << mp.getJson());
+
+        requestCount++;
+
+        this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+    }
 
     template <typename Func>
     void registerProcedure (const string& procedure, Func f) {

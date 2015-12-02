@@ -136,6 +136,7 @@ public:
             //std::cout << "Wrong type of arguments " << std::endl;
             return false;
         }
+        return true;
     }
 
     virtual MsgPack invoke(MPNode arr) override {
@@ -165,6 +166,8 @@ public:
             //std::cout << "Wrong type of arguments " << std::endl;
             return false;
         }
+
+        return true;
     }
 
     virtual MsgPack invoke(MPNode arr) override {

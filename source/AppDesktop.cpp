@@ -8,7 +8,7 @@
 
 //WampTransportRaw *wt;
 WampTransportWS *wt;
-WampMBED *wamp;
+Wamp *wamp;
 
 void onConnect() {
 
@@ -25,7 +25,7 @@ int main() {
 
     //wt = new WampTransportRaw {"localhost"};
     wt = new WampTransportWS {"ws://localhost:8081"};
-    wamp = new WampMBED (*wt);
+    wamp = new Wamp (*wt);
 
     wamp->onClose = ([&]() {
         LOG("Reconnecting");
@@ -36,7 +36,7 @@ int main() {
     wamp->connect([&]() {
         LOG("Session joined :" << wamp->sessionID);
 
-        wamp->publish("test", MsgPackArr {"hello"}, MsgPackMap {});
+        wamp->pub("test", "hello");
 
         wamp->subscribe("com.example.oncounter", [](MPNode args, MPNode kwargs) {
             (void) kwargs;

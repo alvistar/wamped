@@ -21,11 +21,6 @@ int main() {
 
     LOG("mylog" << 2);
 
-    MsgPack mp2;
-    mp2 << MPARR(3) << 1 << "realm1" << MPMAP(1)
-            << "roles" << MPMAP(1) << "subscriber" << MPMAP(0);
-
-    mp2.print();
 
     MsgPackArr mp3 {"gatto","cane","pesce"};
     mp3.print();
@@ -35,6 +30,10 @@ int main() {
 
     MsgUnpack munp(mp3.getData(),mp3.getUsedBuffer());
     MPNode root = munp.getRoot();
+
+    MsgPack mp5;
+    mp5.pack_array(7,8,"gatto");
+    mp5.print();
 
 
     std::cout << root.toJson() << ":" << (std::string) root[1];

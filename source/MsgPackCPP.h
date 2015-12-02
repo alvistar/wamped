@@ -14,18 +14,27 @@
 #define MPARR(X) MComp {mpArr, X}
 #define MPMAP(X) MComp {mpMap, X}
 
-enum mpack_compound
-{
-    mpArr,
-    mpMap,
-};
-
-typedef std::pair <mpack_compound, uint> MComp;
 
 class MsgPack {
 private:
     mpack_writer_t writer;
     char data[1024];
+
+    void packAll() {
+
+    }
+
+    template <typename A>
+    void packAll (A&& p1){
+        pack(p1);
+    };
+
+    template <typename A, typename ...B>
+    void packAll (A&& p1, B&&... params) {
+        packAll (std::forward<A> (p1));
+        packAll (std::forward<B>(params)...);
+    };
+
 public:
     MsgPack();
     MsgPack(int i):MsgPack() {
@@ -49,19 +58,12 @@ public:
     char* getData();
     std::string getJson();
 
-    MsgPack& operator << (const MComp& comp) {
-        switch (comp.first) {
-            case mpArr:
-                pack_array(comp.second);
-                break;
-            case mpMap:
-                pack_map(comp.second);
-                break;
-            default:
-                break;
-        }
-        return *this;
-    }
+    template <typename ...ITEMS>
+    void packArray(ITEMS&&... items) {
+        uint elements = uint(sizeof ...(items));
+        pack_array(elements);
+        packAll(std::forward<ITEMS>(items)...);
+    };
 
     template <typename T>
     MsgPack& operator << (const T& data) {
