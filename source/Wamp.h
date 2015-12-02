@@ -15,10 +15,10 @@
 #include "wampConstants.h"
 
 #include "LogConfig.h"
-
-#ifdef DEBUG_WAMP
 #include "logger.h"
-#else
+
+#ifndef DEBUG_WAMP
+#undef LOG
 #define LOG(X)
 #endif
 
@@ -47,8 +47,8 @@ private:
 
     void hello(string realm);
 
-    void yield(const WampID_t& invocationID, const MsgPack& arguments,
-               const MsgPack& argumentsKW);
+    void yield(const WampID_t& invocationID, const MsgPack& arguments);
+    void yield(const WampID_t& invocationID);
 
     void sendError (const enum wamp_messages &msgType,
                     const std::string &errorURI,

@@ -1,10 +1,10 @@
 #include <iostream>
 #include "Wamp.h"
-#include "logger.h"
 #include "MpackPrinter.h"
 #include "WampTransportRaw.h"
 #include "WampTransportWS.h"
 #include "MsgUnpack.h"
+#include "logger.h"
 
 //WampTransportRaw *wt;
 WampTransportWS *wt;
@@ -12,6 +12,14 @@ Wamp *wamp;
 
 void onConnect() {
 
+}
+
+void empty() {
+    LOG("Called empty");
+}
+
+uint16_t getCounter() {
+    return 42;
 }
 
 int sum(int x, int y) {
@@ -44,6 +52,7 @@ int main() {
         });
 
         wamp->registerProcedure("com.mydevice.sum", sum);
+        wamp->registerProcedure("com.freedom.getCounter", empty);
 
         wamp->call("com.example.add", MsgPackArr {20,3}, MsgPackMap{},
                    [](WampError *err, MPNode args, MPNode kwargs) {

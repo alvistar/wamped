@@ -1,7 +1,6 @@
 #include <iostream>
 #include <source/Accelerometer/FXOS8700Q.h>
 #include "Wamp.h"
-#include "logger.h"
 #include "MpackPrinter.h"
 #include "mbed-drivers/mbed.h"
 #include "WampTransportRaw.h"
@@ -11,6 +10,9 @@
 #include "Accelerometer/FXOS8700Q.h"
 #include "minar/minar.h"
 
+#include "logger.h"
+
+//#define ENABLE_ACCEL
 #define SAMPLERATE 100
 
 //Accelerometer
@@ -24,21 +26,40 @@ motion_data_units_t acc_data;
 //WampTransportRaw *wt;
 WampTransportWS *wt;
 Wamp *wamp;
+uint16_t btnCounter =0;
 
+DigitalOut leds[3] {{LED_BLUE,1},{LED_GREEN,1},{LED_RED,1}};
+
+int8_t cled = -1;
+
+//DigitalOut cled {LED_BLUE,1};
 
 static void blinky(void) {
     static DigitalOut led(LED1);
     led = !led;
 }
 
-static void switchon(void) {
-	static DigitalOut led(LED_BLUE);
-	led = 0;
+static void switchon(int color) {
+    for (int i=0; i < 3;i++) {
+        if (color==i) {
+            leds[i] = 0;
+            cled = i;
+        }
+        else
+            leds[i] = 1;
+    }
+
+    wamp->pub("com.freedom.switched",cled);
+
 }
 
 static void switchoff(void) {
-    static DigitalOut led(LED_BLUE);
-    led = 1;
+    for (int i=0; i < 3;i++) {
+        leds[i] = 1;
+    }
+
+    cled = -1;
+    wamp->pub("com.freedom.switched",cled);
 }
 
 static void sample(void) {
@@ -50,26 +71,25 @@ static void sample(void) {
 
 }
 
-int switchColor(int color) {
-    static DigitalOut ledBlue(LED_BLUE);
-    static DigitalOut ledRed(LED_RED);
-
-    switch (color) {
-        case 1:
-            ledRed = 0;
-            ledBlue =1;
-            break;
-        default:
-            ledRed = 1;
-            ledBlue = 0;
-    }
-}
-
 static void pressed() {
     LOG("Publishing pressed event");
-
+    btnCounter++;
     wamp->publish("button");
+}
 
+static void sw3pressed() {
+    if (cled==-1)
+        switchon(1);
+    else
+        switchoff();
+}
+
+uint16_t getCounter() {
+    return btnCounter;
+}
+
+int8_t ledStatus() {
+    return cled;
 }
 
 int sum (int x,int y) {
@@ -77,6 +97,7 @@ int sum (int x,int y) {
 }
 
 InterruptIn button(SW2);
+InterruptIn button2(SW3);
 
 void app_start(int, char**) {
 
@@ -92,8 +113,10 @@ void app_start(int, char**) {
         LOG("Session joined :" << wamp->sessionID);
 
         //Send accelerator data
+#ifdef ENABLE_ACCEL
         accel.enable();
         minar::Scheduler::postCallback(sample).period(minar::milliseconds(SAMPLERATE));
+#endif
 
         wamp->pub("test", "hello");
 
@@ -103,20 +126,26 @@ void app_start(int, char**) {
 //        });
 
         //wamp->registerProcedure("com.freedom.sum",sum);
-        wamp->registerProcedure("com.freedom.switch",switchColor);
-
-        wamp->subscribe("com.example.switchon",[](MPNode args, MPNode kwargs) {
-        	LOG("Received switchon");
-        	switchon();
-        });
-
-        wamp->subscribe("com.example.switchoff",[](MPNode args, MPNode kwargs) {
-            LOG("Received switchon");
-            switchoff();
-        });
+        wamp->registerProcedure("com.freedom.getCounter", getCounter);
+        wamp->registerProcedure("com.freedom.switchon", switchon);
+        wamp->registerProcedure("com.freedom.switchoff", switchoff);
+        wamp->registerProcedure("com.freedom.getLedStatus", ledStatus);
+//        wamp->subscribe("com.freedom.switchon",[](MPNode args, MPNode kwargs) {
+//            (void) kwargs;
+//            LOG("Received switchon");
+//        	switchon(args[1]);
+//        });
+//
+//        wamp->subscribe("com.freedom.switchoff",[](MPNode args, MPNode kwargs) {
+//            (void) args;
+//            (void) kwargs;
+//            LOG("Received switchon");
+//            switchoff();
+//        });
     });
 
     button.rise (pressed);
+    button2.rise (sw3pressed);
 
     wamp->onClose = [&]() {
         NVIC_SystemReset();

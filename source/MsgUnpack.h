@@ -25,6 +25,14 @@ public:
         return node.tree->error;
     }
 
+    mpack_type_t type() {
+        return mpack_node_type(node);
+    }
+
+    bool isNil() {
+        return mpack_node_type(node) == mpack_type_nil;
+    }
+
     size_t arrayLength ();
     std::string toJson();
 

@@ -45,6 +45,9 @@ public:
         pack(s);
     }
 
+    bool isEmpty() {
+        return mpack_writer_buffer_used(&writer) == 0;
+    }
 
     void pack_array(uint32_t number);
     void pack_map(uint32_t n);

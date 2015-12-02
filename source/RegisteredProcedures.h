@@ -84,32 +84,62 @@ public:
 
 //Specialization for void
 //TODO
-//template <typename ...ARGS>
-//class unpack_caller<void, ARGS>
-//{
-//private:
-//    template <typename FuncType, size_t... I>
-//    void call(FuncType &f, MPNode arr, indices<I...>)
-//    {
-//        f(arr.at(I)...);
-//    }
-//
-//public:
-//    template <typename FuncType>
-//    void operator () (FuncType &f, MPNode arr)
-//    {
-//        //TODO
-////        if (arr.size() != num_args) {
-////            throw (WampException("Wrong Number of Parameters"));
-////        }
-//        call(f, arr, BuildIndices<num_args>{});
-//    }
-//};
+template <typename ...ARGS>
+class unpack_caller<void, ARGS...>
+{
+private:
+    template <size_t... I>
+    int _check (MPNode& arr, indices<I...>) {
+        checkParameters<ARGS...>(arr.at(I)...);
+        return arr.getError();
+    }
+
+    template <typename FuncType, size_t... I>
+    void call(FuncType &f, MPNode& arr, indices<I...>)
+    {
+
+         f(arr.at(I)...);
+    }
+
+public:
+
+    template <typename FuncType>
+    void operator () (FuncType &f, MPNode& arr)
+    {
+        call(f, arr, BuildIndices<sizeof... (ARGS)>{});
+    }
+
+    int check(MPNode& arr) {
+        return _check(arr, BuildIndices<sizeof... (ARGS)>{});
+    }
+};
 
 
 //--------------------
 //RegisteredProcedures
 //--------------------
+
+template <typename ...ARGS>
+static int _check (MPNode arr) {
+    if (sizeof ... (ARGS) != arr.arrayLength()) {
+        //Wrong number of arguments
+            std::cout << "Wrong number of arguments. Expected "
+            << sizeof ... (ARGS) << " received "<< arr.arrayLength()
+            << std::endl;
+        return false;
+    }
+
+    if (sizeof ... (ARGS)> 0) {
+        if ( unpack_caller<void, ARGS...>().check(arr)) {
+            //Wrong type of arguments
+                std::cout << "Wrong type of arguments " << std::endl;
+            return false;
+        }
+    }
+
+
+    return true;
+}
 
 class RegisteredProcedureBase {
 public:
@@ -126,23 +156,12 @@ public:
     RegisteredProcedure(FUNC f):f(f) {};
 
     virtual int check (MPNode arr) override {
-        if (sizeof ... (ARGS) != arr.arrayLength()) {
-            //Wrong number of arguments
-            return false;
-        }
-
-        if ( unpack_caller<void, ARGS...>().check(arr)) {
-            //Wrong type of arguments
-            //std::cout << "Wrong type of arguments " << std::endl;
-            return false;
-        }
-        return true;
+        return _check<ARGS...>(arr);
     }
 
     virtual MsgPack invoke(MPNode arr) override {
         return (MsgPack) unpack_caller<R, ARGS...>{} (f,arr);
     }
-
 
 };
 
@@ -156,23 +175,12 @@ public:
     RegisteredProcedure(FUNC f):f(f) {};
 
     virtual int check (MPNode arr) override {
-        if (sizeof ... (ARGS) != arr.arrayLength()) {
-            //Wrong number of arguments
-            return false;
-        }
-
-        if ( unpack_caller<void, ARGS...>().check(arr)) {
-            //Wrong type of arguments
-            //std::cout << "Wrong type of arguments " << std::endl;
-            return false;
-        }
-
-        return true;
+        return _check<ARGS...>(arr);
     }
 
     virtual MsgPack invoke(MPNode arr) override {
 
-        unpack_caller<void, ARGS...>{} ();
+        unpack_caller<void, ARGS...>{} (f,arr);
         return MsgPack();
     }
 };

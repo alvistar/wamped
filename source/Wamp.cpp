@@ -148,19 +148,32 @@ void Wamp::call(string const &procedure, const MsgPack &arguments, const MsgPack
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
-void Wamp::yield(const WampID_t &invocationID, const MsgPack &arguments, const MsgPack &argumentsKW) {
+
+void Wamp::yield(const WampID_t &invocationID) {
     mp.clear();
-    mp.pack_array(5);
+    mp.pack_array(3);
     mp.pack((int) WAMP_MSG_YIELD);
     mp.pack(invocationID);
     mp.pack_map(0);
-    mp.pack(arguments);
-    mp.pack(argumentsKW);
 
     LOG ("Yielding  " << mp.getJson());
 
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
+
+void Wamp::yield(const WampID_t &invocationID, const MsgPack &arguments) {
+    mp.clear();
+    mp.pack_array(4);
+    mp.pack((int) WAMP_MSG_YIELD);
+    mp.pack(invocationID);
+    mp.pack_map(0);
+    mp.pack(arguments);
+
+    LOG ("Yielding  " << mp.getJson());
+
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+}
+
 
 void Wamp::sendError(const enum wamp_messages &msgType, const std::string &errorURI, const WampID_t &requestID,
                      const MsgPack &details, const MsgPack &arguments= MsgPackArr(), const MsgPack &argumentsKW = MsgPackMap()) {
@@ -179,7 +192,6 @@ void Wamp::sendError(const enum wamp_messages &msgType, const std::string &error
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 
 }
-
 
 void Wamp::parseMessage(char* buffer, size_t size) {
 
@@ -268,7 +280,7 @@ void Wamp::parseMessage(char* buffer, size_t size) {
             MPNode args = root.at(4, true);
             MPNode kwargs = root.at(5, true);
 
-            LOG("Received INVOCATION message");
+            LOG("Received INVOCATION message for registered procedure "<< registrationID);
 
             if (registrations.find(registrationID) == registrations.end()) {
                 LOG ("Registration not found");
@@ -281,24 +293,15 @@ void Wamp::parseMessage(char* buffer, size_t size) {
                 sendError(WAMP_MSG_INVOCATION, "wamp.error.invalid_argument", requestID, MsgPackMap());
                 return;
             }
+
             MsgPack result = procedure->invoke(args);
 
             LOG("Result:" << result.getJson());
-            yield(requestID, MsgPackArr {result}, MsgPackMap {});
-//
-//                try {
-//
-//                    yield(requestID, WSArrayM {result});
-//                }
-//                catch (WampException &e) {
-//                    LOG_(ERROR) << e.what();
-//                    WSDictM details {};
-//                    error(WAMP_MSG_INVOCATION,"wamp.error.invalid_argument", requestID, details);
-//                }
-//            }
-//            catch (out_of_range) {
-//                LOG_(DEBUG) << "RegistrationID not found";
-//            }
+
+            if (result.isEmpty())
+                yield(requestID);
+            else
+                yield(requestID, MsgPackArr {result});
 
             break;
         };
@@ -389,6 +392,7 @@ void Wamp::parseMessage(char* buffer, size_t size) {
     }
 }
 
+
 void Wamp::close() {
     LOG("Wamp Closed Connection");
     connected = false;
@@ -397,6 +401,3 @@ void Wamp::close() {
     if (onClose)
         onClose();
 }
-
-
-
