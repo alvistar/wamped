@@ -42,22 +42,6 @@ enum rlstate {
 // + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 // |                     Payload Data continued ...                |
 // +---------------------------------------------------------------+
-struct wsheader_type {
-    unsigned header_size;
-    bool fin;
-    bool mask;
-    enum opcode_type {
-        CONTINUATION = 0x0,
-        TEXT_FRAME = 0x1,
-        BINARY_FRAME = 0x2,
-        CLOSE = 8,
-        PING = 9,
-        PONG = 0xa,
-    } opcode;
-    int N0;
-    uint64_t N;
-    uint8_t masking_key[4];
-};
 
 
 void WampTransportWS::connect() {
@@ -128,12 +112,13 @@ void WampTransportWS::process() {
 }
 
 void WampTransportWS::sendMessage(char *buffer, size_t size) {
+    _sendMessage(wsheader_type::BINARY_FRAME, buffer, size);
+}
+
+
+void WampTransportWS::_sendMessage(const wsheader_type::opcode_type& type, const char *buffer, const size_t& size) {
     const uint8_t masking_key[4] = { 0x12, 0x34, 0x56, 0x78 };
     std::vector<uint8_t> txbuf;
-    // TODO: consider acquiring a lock on txbuf...
-    // TODO: check status
-
-    wsheader_type::opcode_type type = wsheader_type::BINARY_FRAME;
 
     std::vector<uint8_t> header;
     header.assign(2 + (size >= 126 ? 2 : 0) + (size >= 65536 ? 6 : 0) + (useMask ? 4 : 0), 0);
@@ -218,7 +203,6 @@ int WampTransportWS::readLine(char *buffer, int size, std::string &s) {
 
     return i;
 }
-
 
 void WampTransportWS::decode(char *buffer, const size_t &size) {
     static int mhLines = 0;
@@ -324,34 +308,33 @@ void WampTransportWS::decodeWS(char *buffer, const size_t &size) {
             receivedData.insert(receivedData.end(), rxbuf.begin()+ws.header_size, rxbuf.begin()+ws.header_size+(size_t)ws.N);// just feed
             if (ws.fin) {
                 //callable((const std::vector<uint8_t>) receivedData);
-                LOG("Received complete message: " << (char*) &receivedData[0]);
+                LOG("Received complete message");
                 onMessageBin((char*) &receivedData[0],receivedData.size());
                 receivedData.erase(receivedData.begin(), receivedData.end());
                 std::vector<uint8_t> ().swap(receivedData);// free memory
             }
         }
         else if (ws.opcode == wsheader_type::PING) {
+            LOG("Received ping");
             if (ws.mask) { for (size_t i = 0; i != ws.N; ++i) { rxbuf[i+ws.header_size] ^= ws.masking_key[i&0x3]; } }
             //TODO
-            //std::string data(rxbuf.begin()+ws.header_size, rxbuf.begin()+ws.header_size+(size_t)ws.N);
-
-            //sendData(wsheader_type::PONG, data.size(), data.begin(), data.end());
+            std::string data(rxbuf.begin()+ws.header_size, rxbuf.begin()+ws.header_size+(size_t)ws.N);
+            _sendMessage(wsheader_type::PONG, data.c_str(), data.size());
         }
         else if (ws.opcode == wsheader_type::PONG) { }
         else if (ws.opcode == wsheader_type::CLOSE) {
             //TODO
-            //close();
+            LOG("Got close message");
+            close();
             }
         else {
-            fprintf(stderr, "ERROR: Got unexpected WebSocket message.\n");
+            LOG("ERROR: Got unexpected WebSocket message.");
             //TODO
-            //close();
+            close();
             }
 
         rxbuf.erase(rxbuf.begin(), rxbuf.begin() + ws.header_size+(size_t)ws.N);
     }
-
-
 }
 
 WampTransportWS::WampTransportWS(const std::string &url, const string &origin):url(url),origin(origin) {
@@ -386,6 +369,7 @@ void WampTransportWS::onSocketConnect() {
     handshake();
 }
 
+
 void WampTransportWS::onReadable() {
     _bpos = sizeof(buffer);
     /* Read data out of the socket */
@@ -397,7 +381,12 @@ void WampTransportWS::onReadable() {
         decode(buffer, _bpos);
 }
 
-
 void WampTransportWS::onDisconnect() {
     onClose();
+}
+
+void WampTransportWS::close() {
+    uint8_t closeFrame[6] = {0x88, 0x80, 0x00, 0x00, 0x00, 0x00};
+    std::vector<uint8_t> header(closeFrame, closeFrame+6);
+    socket.send((char*)&header[0], header.size());
 }

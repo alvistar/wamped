@@ -32,7 +32,7 @@ int main() {
     std::cout << "Hello world!\n";
 
     //wt = new WampTransportRaw {"localhost"};
-    wt = new WampTransportWS {"ws://localhost:8081"};
+    wt = new WampTransportWS {"ws://localhost:8080"};
     wamp = new Wamp (*wt);
 
     wamp->onClose = ([&]() {

@@ -53,6 +53,11 @@ void log(const char *file,int line,const LogData<List> &data)
     std::cout << "\r\n";
 #endif //YOTTA_CFG_MBED
 }
+#endif //LOGGER_H
+
+#ifdef LOG
+#undef LOG
+#endif
 
 #define LOG(x) (log(__FILE__,__LINE__,LogData<None>() << x))
-#endif //LOGGER_H
+

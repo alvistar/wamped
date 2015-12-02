@@ -17,6 +17,24 @@
 
 #define BUFFERSIZE 4096
 
+typedef struct wsheader_type {
+    unsigned header_size;
+    bool fin;
+    bool mask;
+    enum opcode_type {
+        CONTINUATION = 0x0,
+        TEXT_FRAME = 0x1,
+        BINARY_FRAME = 0x2,
+        CLOSE = 8,
+        PING = 9,
+        PONG = 0xa,
+    } opcode;
+    int N0;
+    uint64_t N;
+    uint8_t masking_key[4];
+} wsheader_type;
+
+
 class WampTransportWS: public WampTransport {
 private:
     SocketPAL socket;
@@ -42,6 +60,7 @@ private:
     void decodeWS(char *buffer, const size_t &size);
     void decode(char *buffer, const size_t &size);
     int readLine(char *buffer, int size, std::string &s);
+    void _sendMessage(const wsheader_type::opcode_type& type, const char *buffer, const size_t& size);
 
 public:
     WampTransportWS(const std::string& url, const std::string& origin=std::string());
@@ -49,6 +68,7 @@ public:
     void connect() override ;
     void process() override;
     void sendMessage(char* buffer, size_t size) override;
+    void close();
 
 
 };
