@@ -9,7 +9,7 @@ int add(int x, int y) {
 }
 
 std::string mixed(int x, int y) {
-    //std::cout << node.toJson() << std::endl;
+    std::cout << "Called with "<< x << ":"<<y<< std::endl;
     return 0;
 };
 
@@ -30,13 +30,13 @@ int main() {
     MsgUnpack munp2 (mp2.getData(), mp2.getUsedBuffer());
     MPNode root2= munp2.getRoot();
     if (p1->check(root2))
-        p1->invoke(root2).print();
+        std::cout << p1->invoke(root2) << std::endl;
 
 
     MsgPackArr mp{};
     MsgUnpack munp (mp.getData(), mp.getUsedBuffer());
     MPNode root = munp.getRoot();
     if (p2->check(root))
-        p2->invoke(root).print();
+        std::cout << p2->invoke(root) << std::endl;
 
 }

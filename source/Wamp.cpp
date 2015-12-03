@@ -104,7 +104,7 @@ void Wamp::publish(string const &topic) {
     requestCount++;
 
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
-};
+}
 
 void Wamp::publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW) {
     if (!connected)

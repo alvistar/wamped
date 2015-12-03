@@ -29,13 +29,13 @@ private:
     template <typename A>
     void packAll (A&& p1){
         pack(p1);
-    };
+    }
 
     template <typename A, typename ...B>
     void packAll (A&& p1, B&&... params) {
         packAll (std::forward<A> (p1));
         packAll (std::forward<B>(params)...);
-    };
+    }
 
 public:
     MsgPack();
@@ -91,13 +91,13 @@ private:
     template <typename A>
     void packAll (A&& p1){
         pack(p1);
-    };
+    }
 
     template <typename A, typename ...B>
     void packAll (A&& p1, B&&... params) {
         packAll (std::forward<A> (p1));
         packAll (std::forward<B>(params)...);
-    };
+    }
 
 public:
 
@@ -119,14 +119,14 @@ private:
     template <typename A>
     void packAll (A&& p1){
         pack(p1);
-    };
+    }
 
     template <typename A, typename ...B>
     void packAll (A&& p1, B&&... params)
     {
         packAll (std::forward<A> (p1));
         packAll (std::forward<B>(params)...);
-    };
+    }
 public:
 
     template <typename ...A>

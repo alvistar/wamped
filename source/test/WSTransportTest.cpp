@@ -5,10 +5,12 @@ int main () {
 
     wt.onConnect= ([&] () {
         LOG("Sending message");
-        wt.sendMessage("Pino",5);
+        char msg[] = "Hello";
+        wt.sendMessage(msg,5);
     });
 
     wt.onMessageBin = ([&] (char* message, size_t size) {
+        (void) size;
         LOG("Got message:" << message);
     });
 
@@ -19,6 +21,6 @@ int main () {
 
     int n=0;
     while (n>=0) {
-        n= wt.process();
+        wt.process();
     }
 }
