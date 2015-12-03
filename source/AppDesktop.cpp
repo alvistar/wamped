@@ -1,6 +1,5 @@
 #include <iostream>
 #include "Wamp.h"
-#include "MpackPrinter.h"
 #include "WampTransportRaw.h"
 #include "WampTransportWS.h"
 #include "MsgUnpack.h"
@@ -48,7 +47,7 @@ int main() {
 
         wamp->subscribe("com.example.oncounter", [](MPNode args, MPNode kwargs) {
             (void) kwargs;
-            LOG("Received event: " << args.toJson());
+            LOG("Received event: " << args);
         });
 
         wamp->registerProcedure("com.mydevice.sum", sum, [](URI err) {
@@ -62,8 +61,9 @@ int main() {
 
         wamp->call("com.example.add", MsgPackArr {20,3}, MsgPackMap{},
                    [](URI err, MPNode args, MPNode kwargs) {
-            if (!err.empty()) {
-                LOG("Received result:" << args.toJson());
+                       (void) kwargs;
+                   if (!err.empty()) {
+                LOG("Received result:" << args);
             }
 
         });

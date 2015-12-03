@@ -8,7 +8,7 @@
 #include <random>
 #include <unordered_map>
 #include "WampTransport.h"
-#include "MsgPackCPP.h"
+#include "MsgPack.h"
 #include "mpack/mpack.h"
 #include "MsgUnpack.h"
 #include "RegisteredProcedures.h"

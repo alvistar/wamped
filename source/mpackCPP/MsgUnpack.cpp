@@ -3,7 +3,6 @@
 //
 
 #include "MsgUnpack.h"
-#include "MpackPrinter.h"
 #include <sstream>
 #include <string>
 #include <memory>
@@ -24,9 +23,86 @@ mpack_error_t MsgUnpack::getError() {
     return tree.error;
 }
 
-std::string MPNode::toJson() {
-    MpackPrinter printer(node);
-    return printer.toJSON();
+void MPNode::_getJson(std::stringstream &s, const mpack_node_t &node) {
+    mpack_node_data_t* data = node.data;
+    switch (data->type) {
+
+        case mpack_type_nil:
+            s << "null";
+            break;
+        case mpack_type_bool:
+            s << (data->value.b ? "true" : "false");
+            break;
+
+        case mpack_type_float:
+            s << data->value.f;
+            break;
+        case mpack_type_double:
+            s << data -> value.d;
+            break;
+
+        case mpack_type_int:
+            s << data -> value.i;
+            break;
+        case mpack_type_uint:
+            s << data->value.u;
+            break;
+
+        case mpack_type_bin:
+            s << "<binary data of length " << data->value.data.l << ">";
+            break;
+
+        case mpack_type_ext:
+            s << "<ext data of type " <<  data->exttype << " and length " << data->value.data.l << ">";
+            break;
+
+        case mpack_type_str:
+        {
+            s << "\"" ;
+
+            const char* bytes = mpack_node_data(node);
+            for (size_t i = 0; i < data->value.data.l; ++i) {
+                char c = bytes[i];
+                switch (c) {
+                    case '\n': s << "\\n"; break;
+                    case '\\': s << "\\\\"; break;
+                    case '"': s <<  "\\\""; break;
+                    default: s << c; break;
+                }
+            }
+            s << "\"" ;
+        }
+            break;
+
+        case mpack_type_array:
+            s << "[";
+            for (size_t i = 0; i < data->value.content.n; ++i) {
+                _getJson(s,mpack_node_array_at(node, i));
+                if (i != data->value.content.n - 1)
+                    s << ',';
+            }
+            s << ']';
+            break;
+
+        case mpack_type_map:
+            s << "{";
+            for (size_t i = 0; i < data->value.content.n; ++i) {
+                _getJson(s,mpack_node_map_key_at(node, i));
+                s << ":";
+                _getJson(s,mpack_node_map_value_at(node, i));
+                if (i != data->value.content.n - 1)
+                    s << ',';
+            }
+
+            s << '}';
+            break;
+    }
+}
+
+std::string MPNode::getJson() const {
+    std::stringstream s;
+    _getJson(s, node);
+    return s.str();
 }
 
 MPNode MPNode::operator[](const uint16_t  &index) {

@@ -103,8 +103,8 @@ void app_start(int, char**) {
 
     std::cout << "Hello world!\n";
 
-    //wt = new WampTransportRaw {"192.168.20.192"};
-    wt = new WampTransportWS {"ws://192.168.20.192:8081"};
+    //wt = new WampTransportRaw {"192.168.20.192",8081};
+    wt = new WampTransportWS {"ws://192.168.20.192:8080"};
     wamp = new Wamp (*wt);
 
 

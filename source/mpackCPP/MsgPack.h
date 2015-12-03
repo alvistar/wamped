@@ -20,6 +20,8 @@ private:
     mpack_writer_t writer;
     char data[1024];
 
+    void _getJson(std::stringstream &s, mpack_reader_t &reader) const;
+
     void packAll() {
 
     }
@@ -54,12 +56,11 @@ public:
     void pack(std::string s);
     void pack(int i);
     void pack(MsgPack mp);
-    void print();
     void clear();
     void pack(unsigned long long int i);
-    size_t getUsedBuffer();
-    char* getData();
-    std::string getJson();
+    size_t getUsedBuffer() const;
+    char* getData() const;
+    std::string getJson() const;
 
     template <typename ...ITEMS>
     void packArray(ITEMS&&... items) {
@@ -73,6 +74,12 @@ public:
         pack(data);
         return *this;
     }
+
+    friend std::ostream &operator << (std::ostream &os, const MsgPack &o) {
+        return os << o.getJson();
+    }
+
+
 };
 
 class MsgPackArr: public MsgPack {

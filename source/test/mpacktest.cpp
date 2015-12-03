@@ -1,9 +1,10 @@
 #include "mpack/mpack.h"
-#include "MsgPackCPP.h"
+#include "MsgPack.h"
 #include "MsgUnpack.h"
 #include "logger.h"
 #include <iostream>
 
+using namespace std;
 int main() {
     MsgPack mp;
     mp.clear();
@@ -17,26 +18,26 @@ int main() {
     mp.pack_map(1);
     mp.pack("subscriber");
     mp.pack_map(0);
-    mp.print();
+    std::cout  << mp << endl;
 
     LOG("mylog" << 2);
 
 
     MsgPackArr mp3 {"gatto","cane","pesce"};
-    mp3.print();
+    std::cout << mp3 << endl;
 
     MsgPackMap mp4 {"colore","rosso","pesce","spigola"};
-    mp4.print();
+    std::cout << mp4 << endl;
 
     MsgUnpack munp(mp3.getData(),mp3.getUsedBuffer());
     MPNode root = munp.getRoot();
 
     MsgPack mp5;
-    mp5.pack_array(7,8,"gatto");
-    mp5.print();
+    mp5.packArray(7,8,"gatto");
+    std::cout << mp5 << endl;
 
 
-    std::cout << root.toJson() << ":" << (std::string) root[1];
+    std::cout << root.getJson() << ":" << (std::string) root[1];
 
 
 }

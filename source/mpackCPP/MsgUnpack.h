@@ -13,11 +13,11 @@
 
 class MPNode {
 private:
+    static void _getJson(std::stringstream &s, const mpack_node_t &node);
 
 public:
     mpack_node_t node;
     MPNode(mpack_node_t node):node(node){};
-    MPNode();
 
     MPNode operator[](const uint16_t  &index);
     MPNode at(const uint16_t   &index, bool ignore_errors=false);
@@ -34,7 +34,7 @@ public:
     }
 
     size_t arrayLength ();
-    std::string toJson();
+    std::string getJson() const;
 
     operator std::string();
 
@@ -48,6 +48,10 @@ public:
 
     operator unsigned long long int() {
         return mpack_node_u64(node);
+    }
+
+    friend std::ostream &operator << (std::ostream &os, const MPNode &o) {
+        return os << o.getJson();
     }
 };
 

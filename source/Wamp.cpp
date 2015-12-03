@@ -199,7 +199,7 @@ void Wamp::parseMessage(char* buffer, size_t size) {
 
     MsgUnpack munp(buffer,size);
     MPNode root = munp.getRoot();
-    LOG ("Received msg "<< root.toJson());
+    LOG ("Received msg "<< root);
 
     //msgType = mpack_node_u16(mpack_node_array_at(root,0));
     msgType = root[0];
@@ -281,7 +281,7 @@ void Wamp::parseMessage(char* buffer, size_t size) {
             }
 
             MPNode args = root.at(4, true);
-            MPNode kwargs = root.at(5, true);
+            //MPNode kwargs = root.at(5, true);
 
             LOG("Received INVOCATION message for registered procedure "<< registrationID);
 
