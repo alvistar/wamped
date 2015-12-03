@@ -7,6 +7,11 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <sys/errno.h>
+#include <cstring>
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
 
 #include "LogConfig.h"
 #ifdef DEBUG_WAMP_SOCKET
@@ -120,7 +125,7 @@ void SocketPAL::process() {
 
 spal::error SocketPAL::getError(int error) {
     if (error ==0)
-        return error::SOCKETNOTCONNECTED;
+        return spal::error::SOCKETNOTCONNECTED;
 
     return (spal::error) error;
 }

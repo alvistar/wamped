@@ -3,7 +3,14 @@
 #include "WampTransportRaw.h"
 #include "WampTransportWS.h"
 #include "MsgUnpack.h"
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 #include "logger.h"
+
+
 
 //WampTransportRaw *wt;
 WampTransportWS *wt;
@@ -31,7 +38,7 @@ int main() {
     std::cout << "Hello world!\n";
 
     //wt = new WampTransportRaw {"localhost"};
-    wt = new WampTransportWS {"ws://localhost:8080"};
+    wt = new WampTransportWS {"ws://demo.crossbar.io:8080"};
     wamp = new Wamp (*wt);
 
     wamp->onClose = ([&]() {

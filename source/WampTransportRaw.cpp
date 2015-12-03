@@ -4,8 +4,12 @@
 #include <sstream>
 #include <math.h>
 #include "WampTransportRaw.h"
-
+#include <cstring>
 #include "LogConfig.h"
+
+#ifdef __linux__
+#include <netinet/in.h>
+#endif
 
 #ifdef DEBUG_WAMP_TRANSPORT
 #include "logger.h"
