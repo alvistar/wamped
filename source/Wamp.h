@@ -22,14 +22,16 @@
 #define LOG(X)
 #endif
 
-struct WampError {
-    string URI;
-};
-
 typedef unsigned long long int WampID_t;
+typedef const std::string& URI;
 typedef function<void(const MPNode&,  const MPNode&)> TSubscriptionCallback;
-typedef function<void(WampError *error, const MPNode&, const MPNode&)> TCallCallback;
+typedef function<void(URI err, const MPNode&, const MPNode&)> TCallCallback;
+typedef function<void(URI err)> TRegisterCallback;
 
+typedef struct TRegisterRequest{
+    RegisteredProcedureBase* registeredProcedure;
+    TRegisterCallback registerCallback;
+} TRegistrationRequest;
 
 class Wamp {
 private:
@@ -40,7 +42,7 @@ private:
     unordered_map <WampID_t, TSubscriptionCallback> subscriptionsRequests;
     unordered_map <WampID_t, TSubscriptionCallback> subscriptions;
     unordered_map <WampID_t, TCallCallback> callRequests;
-    unordered_map <WampID_t, RegisteredProcedureBase*> registrationsRequests;
+    unordered_map <WampID_t, TRegisterRequest> registrationsRequests;
     unordered_map <WampID, RegisteredProcedureBase*> registrations;
     unsigned long long int requestCount = 0;
     std::function<void()> onJoin {nullptr};
@@ -97,9 +99,13 @@ public:
     }
 
     template <typename Func>
-    void registerProcedure (const string& procedure, Func f) {
+    void registerProcedure (const string& procedure, Func f, TRegisterCallback callback = nullptr) {
 
-        registrationsRequests[requestCount] = make_RegisteredProcedure(f);
+        TRegistrationRequest registrationRequest;
+        registrationRequest.registeredProcedure = make_RegisteredProcedure(f);
+        registrationRequest.registerCallback = callback;
+
+        registrationsRequests[requestCount] =  registrationRequest;
 
         mp.clear();
         mp.pack_array(4);

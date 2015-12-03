@@ -1,12 +1,14 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-include_directories(../mpack/src)
 
-LIST(APPEND SOURCES MsgPackCPP.cpp MsgUnpack.cpp MpackPrinter.cpp
+add_subdirectory(mpackCPP)
+include_directories(../mpack/src mpackCPP)
+
+LIST(APPEND SOURCES
         Wamp.cpp
         WampTransportWS.cpp
         WampTransportRaw.cpp
         SocketTypes.cpp)
-LIST(APPEND LIBRARIES mpack)
+LIST(APPEND LIBRARIES mpackcpp)
 
 if(YOTTA_CFG_MBED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-literal-suffix")

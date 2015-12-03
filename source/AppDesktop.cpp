@@ -51,12 +51,18 @@ int main() {
             LOG("Received event: " << args.toJson());
         });
 
-        wamp->registerProcedure("com.mydevice.sum", sum);
+        wamp->registerProcedure("com.mydevice.sum", sum, [](URI err) {
+            if (!err.empty()) {
+                LOG("REGISTRATION ERROR:" << err);
+            }
+            LOG("Registration OK");
+        });
+
         wamp->registerProcedure("com.freedom.getCounter", empty);
 
         wamp->call("com.example.add", MsgPackArr {20,3}, MsgPackMap{},
-                   [](WampError *err, MPNode args, MPNode kwargs) {
-            if (!err) {
+                   [](URI err, MPNode args, MPNode kwargs) {
+            if (!err.empty()) {
                 LOG("Received result:" << args.toJson());
             }
 

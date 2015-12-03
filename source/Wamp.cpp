@@ -259,10 +259,13 @@ void Wamp::parseMessage(char* buffer, size_t size) {
                 return;
             }
 
-            auto procedure = registrationsRequests.at(requestID);
-            registrations[registrationID] = procedure;
+            auto registrationRequest = registrationsRequests.at(requestID);
+            registrations[registrationID] = registrationRequest.registeredProcedure;
             registrationsRequests.erase(requestID);
             LOG("Active registrations " << registrations.size());
+
+            if (registrationRequest.registerCallback)
+                registrationRequest.registerCallback(std::string());
 
             break;
 
@@ -352,7 +355,7 @@ void Wamp::parseMessage(char* buffer, size_t size) {
             }
 
             TCallCallback cb = callRequests.at(requestID);
-            cb(nullptr, args, kwargs);
+            cb(std::string(), args, kwargs);
 
             break;
         }
@@ -378,13 +381,36 @@ void Wamp::parseMessage(char* buffer, size_t size) {
                     LOG("Received error for CALL request "<< callRequest);
                     TCallCallback cb = callRequests.at(callRequest);
                     callRequests.erase(callRequest);
-                    WampError e {err};
-                    cb(&e, munp.nil(), munp.nil());
+                    cb(err, munp.nil(), munp.nil());
+                    break;
+
+                }
+                case WAMP_MSG_REGISTER: {
+                    std::string err = root[4];
+                    WampID_t registerRequest = root[2];
+
+                    if (munp.getError() != mpack_ok) {
+                        LOG ("Bad ERROR Message");
+                        return;
+                    }
+
+                    if (registrationsRequests.find(registerRequest) == registrationsRequests.end()) {
+                        LOG ("RequestID not found - # RegistrationsRequests" << registrationsRequests.size());
+                        return;
+                    }
+
+                    LOG("Received error for Register request "<< registerRequest);
+                    TRegisterCallback cb = registrationsRequests.at(registerRequest).registerCallback;
+                    registrationsRequests.erase(registerRequest);
+                    if(cb)
+                        cb(err);
                     break;
 
                 }
                 default:
                     LOG("Uknown erorr");
+
+
             }
         }
 
