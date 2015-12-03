@@ -16,7 +16,7 @@ if(YOTTA_CFG_MBED)
     LIST(APPEND LIBRARIES mbed-drivers sockets)
     add_executable(wampDemo WampMBEDMain.cpp Accelerometer/FXOS8700Q.cpp)
 else(YOTTA_CFG_MBED) #Not MBED
-    LIST(APPEND SOURCES SocketOSX.cpp)
+    LIST(APPEND SOURCES SocketPosix.cpp)
     add_executable(wampDemo AppDesktop.cpp)
 endif(YOTTA_CFG_MBED)
 

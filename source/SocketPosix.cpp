@@ -3,15 +3,13 @@
 //
 
 #include <string>
-#include "SocketOSX.h"
+#include "SocketPosix.h"
 #include <netdb.h>
 #include <stdlib.h>
 #include <sys/errno.h>
 #include <cstring>
-
-#ifdef __linux__
 #include <unistd.h>
-#endif
+
 
 #include "LogConfig.h"
 #ifdef DEBUG_WAMP_SOCKET

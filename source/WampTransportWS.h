@@ -8,7 +8,7 @@
 #ifdef YOTTA_CFG_MBED
 #include "SocketMBED.h"
 #else
-#include "SocketOSX.h"
+#include "SocketPosix.h"
 #endif
 
 #include <vector>

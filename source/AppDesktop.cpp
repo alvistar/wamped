@@ -3,10 +3,7 @@
 #include "WampTransportRaw.h"
 #include "WampTransportWS.h"
 #include "MsgUnpack.h"
-
-#ifdef __linux__
 #include <unistd.h>
-#endif
 
 #include "logger.h"
 
