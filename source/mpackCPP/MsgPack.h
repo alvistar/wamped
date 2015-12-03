@@ -67,7 +67,7 @@ public:
         uint elements = uint(sizeof ...(items));
         pack_array(elements);
         packAll(std::forward<ITEMS>(items)...);
-    };
+    }
 
     template <typename T>
     MsgPack& operator << (const T& data) {
