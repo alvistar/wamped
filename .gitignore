@@ -6,3 +6,6 @@ org.eclipse.cdt.codan.core.prefs
 build
 yotta_modules
 yotta_targets
+testbuild
+source/test/node/node_modules
+.python-version
