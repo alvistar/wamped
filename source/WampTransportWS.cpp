@@ -382,6 +382,9 @@ void WampTransportWS::onReadable() {
 }
 
 void WampTransportWS::onDisconnect() {
+    rxbuf.clear();
+    receivedData.clear();
+    upgraded = false;
     onClose();
 }
 
