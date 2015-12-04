@@ -1,13 +1,18 @@
 {
-  "name": "wamp-mbed",
-  "version": "0.0.0",
-  "bin": "./source",
-  "private": true,
-  "author": "",
-  "license": "Apache-2.0",
+  "name": "wamped",
+  "author": "Alessandro Viganò (https://github.com/alvistar)",
+  "description": "Wamped- C++ 11 Wamp Library Embedded Friendly",
+  "keywords": ["wamp","iot","messaging","protocol"],
+  "homepage": "https://github.com/alvistar/wamped",
+  "repository": {
+    "url": "git@github.com:alvistar/mpack.git",
+    "type": "git"
+  },
+  "license": "Apache 2.0",
   "dependencies": {
     "mbed-drivers": "*",
     "sockets": "*",
-    "nanostack-randlib": "^1.0.0"
+    "nanostack-randlib": "^1.0.0",
+    "mpack":"*"
   }
 }
