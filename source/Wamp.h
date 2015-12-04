@@ -18,9 +18,9 @@
 #include <random>
 #include <unordered_map>
 #include "WampTransport.h"
-#include "MsgPack.h"
+#include "mpackCPP/MsgPack.h"
 #include "mpack/mpack.h"
-#include "MsgUnpack.h"
+#include "mpackCPP/MsgUnpack.h"
 #include "RegisteredProcedures.h"
 #include "wampConstants.h"
 

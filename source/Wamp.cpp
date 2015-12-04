@@ -18,10 +18,6 @@
 #include "WampTransport.h"
 #include "wampConstants.h"
 
-#include "MsgUnpack.h"
-
-
-
 Wamp::Wamp(WampTransport &transport): transport(transport) {
 
     gen = std::mt19937_64 (rd());
