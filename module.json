@@ -1,5 +1,6 @@
 {
   "name": "wamped",
+  "version" : "0.1.0",
   "author": "Alessandro Viganò (https://github.com/alvistar)",
   "description": "Wamped- C++ 11 Wamp Library Embedded Friendly",
   "keywords": ["wamp","iot","messaging","protocol"],
