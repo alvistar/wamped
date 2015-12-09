@@ -15,10 +15,10 @@
 #include <iostream>
 #include "mbed-drivers/mbed.h"
 #include "minar/minar.h"
-#include "Wamp.h"
-#include "WampTransportWS.h"
+#include "wamped/Wamp.h"
+#include "wamped/WampTransportWS.h"
 #include "mpackCPP/MsgUnpack.h"
-#include "logger.h"
+#include "wamped/logger.h"
 
 WampTransportWS *wt;
 Wamp *wamp;

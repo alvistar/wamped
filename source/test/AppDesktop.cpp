@@ -13,13 +13,13 @@
 //        limitations under the License.
 
 #include <iostream>
-#include "Wamp.h"
-#include "WampTransportRaw.h"
-#include "WampTransportWS.h"
-#include "mpackCPP/MsgUnpack.h"
+#include "wamped/Wamp.h"
+#include "wamped/WampTransportRaw.h"
+#include "wamped/WampTransportWS.h"
 #include <unistd.h>
 
-#include "logger.h"
+#include "wamped/logger.h"
+
 
 
 

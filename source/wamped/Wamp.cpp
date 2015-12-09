@@ -18,6 +18,12 @@
 #include "WampTransport.h"
 #include "wampConstants.h"
 
+#ifdef DEBUG_WAMP
+#include "logger.h"
+#else
+#define LOG(X)
+#endif
+
 Wamp::Wamp(WampTransport &transport): transport(transport) {
 
     gen = std::mt19937_64 (rd());

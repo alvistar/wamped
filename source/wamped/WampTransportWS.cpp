@@ -17,8 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "LogConfig.h"
-
 #ifdef DEBUG_WAMP_TRANSPORT
 #include "logger.h"
 #else

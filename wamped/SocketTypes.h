@@ -1,1 +1,1 @@
-../source/SocketTypes.h
+../source/wamped/SocketTypes.h

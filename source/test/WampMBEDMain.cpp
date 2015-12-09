@@ -13,17 +13,14 @@
 //        limitations under the License.
 
 #include <iostream>
-#include <source/Accelerometer/FXOS8700Q.h>
-#include "Wamp.h"
-#include "mbed-drivers/mbed.h"
-#include "WampTransportRaw.h"
-#include "WampTransportWS.h"
-#include "mpackCPP/MsgUnpack.h"
-#include "mpackCPP/MsgPack.h"
 #include "Accelerometer/FXOS8700Q.h"
+#include "wamped/Wamp.h"
+#include "mbed-drivers/mbed.h"
+#include "wamped/WampTransportRaw.h"
+#include "wamped/WampTransportWS.h"
 #include "minar/minar.h"
 
-#include "logger.h"
+#include "wamped/logger.h"
 
 //#define ENABLE_ACCEL
 #define SAMPLERATE 100

@@ -15,7 +15,7 @@
 #include "mpack/mpack.h"
 #include "mpackCPP/MsgPack.h"
 #include "mpackCPP/MsgUnpack.h"
-#include "logger.h"
+#include "wamped/logger.h"
 #include <iostream>
 
 using namespace std;

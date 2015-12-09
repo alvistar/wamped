@@ -24,11 +24,9 @@
 #include "RegisteredProcedures.h"
 #include "wampConstants.h"
 
-#include "LogConfig.h"
+#ifdef DEBUG_WAMP
 #include "logger.h"
-
-#ifndef DEBUG_WAMP
-#undef LOG
+#else
 #define LOG(X)
 #endif
 

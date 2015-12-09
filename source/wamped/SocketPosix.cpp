@@ -20,8 +20,6 @@
 #include <cstring>
 #include <unistd.h>
 
-
-#include "LogConfig.h"
 #ifdef DEBUG_WAMP_SOCKET
 #include "logger.h"
 #else

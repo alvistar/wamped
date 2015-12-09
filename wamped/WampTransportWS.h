@@ -1,1 +1,1 @@
-../source/WampTransportWS.h
+../source/wamped/WampTransportWS.h

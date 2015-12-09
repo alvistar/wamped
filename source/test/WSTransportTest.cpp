@@ -12,8 +12,8 @@
 //See the License for the specific language governing permissions and
 //        limitations under the License.
 
-#include "WampTransportWS.h"
-#include "logger.h"
+#include "wamped/WampTransportWS.h"
+#include "wamped/logger.h"
 int main () {
     WampTransportWS wt("ws://localhost:8126/foo");
 

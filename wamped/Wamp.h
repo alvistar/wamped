@@ -1,1 +1,1 @@
-../source/Wamp.h
+../source/wamped/Wamp.h

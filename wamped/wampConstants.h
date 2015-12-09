@@ -1,1 +1,1 @@
-../source/wampConstants.h
+../source/wamped/wampConstants.h

@@ -1,1 +1,1 @@
-../source/RegisteredProcedures.h
+../source/wamped/RegisteredProcedures.h

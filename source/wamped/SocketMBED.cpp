@@ -16,7 +16,6 @@
 #include "SocketMBED.h"
 #include "sal-stack-lwip/lwipv4_init.h"
 
-#include "LogConfig.h"
 #ifdef DEBUG_WAMP_SOCKET
 #include "logger.h"
 #else
