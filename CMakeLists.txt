@@ -1,5 +1,4 @@
-option(DEBUG_WAMPED_WAMP "Enable debug on wamp layer" OFF)
-option(DEBUG_WAMPED_TRANSPORT "Enable debug on transport layer" OFF)
+INCLUDE(config.CMAKE OPTIONAL)
 
 if(YOTTA_CFG_MBED)
 
