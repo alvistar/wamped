@@ -170,3 +170,8 @@ void app_start(int, char**) {
 ``` cmake
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-literal-suffix")
 ```
+
+**As Mbed OS is in current beta there can be problems in building with some versions of Cmake.**
+
+## Full Demo
+[To be completed]
