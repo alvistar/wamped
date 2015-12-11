@@ -24,12 +24,6 @@
 #include "RegisteredProcedures.h"
 #include "wampConstants.h"
 
-#ifdef DEBUG_WAMP
-#include "logger.h"
-#else
-#define LOG(X)
-#endif
-
 typedef unsigned long long int WampID_t;
 typedef const std::string& URI;
 typedef function<void(const MPNode&,  const MPNode&)> TSubscriptionCallback;
@@ -68,6 +62,8 @@ private:
                     const MsgPack &argumentsKW
     );
 
+    void loggedSend (const std::string & msg);
+
 public:
     WampID_t sessionID;
     bool connected {false};
@@ -99,11 +95,9 @@ public:
         mp.pack(topic);
         mp.packArray(std::forward<ARGS>(args)...);
 
-        LOG ("Publishing to " << topic << "- " << mp.getJson());
-
+        loggedSend("PUBLISH");
         requestCount++;
 
-        this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
     }
 
     template <typename Func>
@@ -122,11 +116,8 @@ public:
         mp.pack_map(0);
         mp.pack(procedure);
 
-
-        LOG("Registering procedure: " << procedure);
+        loggedSend("REGISTER");
         requestCount++;
-
-        this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
     }
 
 };

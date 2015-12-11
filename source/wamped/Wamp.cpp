@@ -57,6 +57,11 @@ void Wamp::connect(std::function<void()> onJoin, std::function<void()> onError) 
     connect (onJoin);
 }
 
+void Wamp::loggedSend(const std::string &msg) {
+    LOG("Sending " << msg << ": " << mp.getJson());
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+}
+
 void Wamp::hello(string realm) {
     mp.clear();
     mp.pack_array(3);
@@ -69,17 +74,7 @@ void Wamp::hello(string realm) {
     mp.pack_map(1);
     mp.pack("subscriber");
     mp.pack_map(0);
-    LOG("Sending Hello: " << mp.getJson());
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
-
-
-    //WSDictM roles {{"subscriber", WSDictM()}};
-    //WSDictM details {{"roles", move(roles)}};
-    //WSArrayM arr {(int) WAMP_MSG_HELLO, realm, details};
-    //string msg = arr.toString();
-
-    //this->transport.sendMessage(msg);
+    loggedSend("HELLO");
 }
 
 void Wamp::subscribe(string topic, TSubscriptionCallback callback) {
@@ -94,11 +89,9 @@ void Wamp::subscribe(string topic, TSubscriptionCallback callback) {
     mp.pack(requestCount);
     mp.pack_map(0);
     mp.pack(topic);
-    LOG ("Subscribing to " << topic << ": " << mp.getJson() );
 
+    loggedSend("SUBSCRIBE");
     requestCount++;
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
 void Wamp::publish(string const &topic) {
@@ -111,11 +104,9 @@ void Wamp::publish(string const &topic) {
     mp.pack(requestCount);
     mp.pack_map(0);
     mp.pack(topic);
-    LOG ("Publishing to " << topic << "- " << mp.getJson());
 
+    loggedSend("PUBLISH");
     requestCount++;
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
 
 void Wamp::publish(string const &topic, const MsgPack& arguments, const MsgPack& argumentsKW) {
@@ -131,12 +122,10 @@ void Wamp::publish(string const &topic, const MsgPack& arguments, const MsgPack&
     mp.pack(arguments);
     mp.pack(argumentsKW);
 
-    LOG ("Publishing to " << topic << "- " << mp.getJson());
-
+    loggedSend("PUBLISH");
     requestCount++;
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
+
 
 void Wamp::call(string const &procedure, const MsgPack &arguments, const MsgPack &argumentsKW, TCallCallback cb) {
     if (!connected)
@@ -153,13 +142,9 @@ void Wamp::call(string const &procedure, const MsgPack &arguments, const MsgPack
     mp.pack(arguments);
     mp.pack(argumentsKW);
 
-    LOG ("Calling " << procedure << "- " << mp.getJson());
-
+    loggedSend("CALL");
     requestCount++;
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
-
 
 void Wamp::yield(const WampID_t &invocationID) {
     mp.clear();
@@ -168,10 +153,9 @@ void Wamp::yield(const WampID_t &invocationID) {
     mp.pack(invocationID);
     mp.pack_map(0);
 
-    LOG ("Yielding  " << mp.getJson());
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+    loggedSend("Yielding");
 }
+
 
 void Wamp::yield(const WampID_t &invocationID, const MsgPack &arguments) {
     mp.clear();
@@ -181,11 +165,8 @@ void Wamp::yield(const WampID_t &invocationID, const MsgPack &arguments) {
     mp.pack_map(0);
     mp.pack(arguments);
 
-    LOG ("Yielding  " << mp.getJson());
-
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+    loggedSend("Yielding");
 }
-
 
 void Wamp::sendError(const enum wamp_messages &msgType, const std::string &errorURI, const WampID_t &requestID,
                      const MsgPack &details, const MsgPack &arguments= MsgPackArr(), const MsgPack &argumentsKW = MsgPackMap()) {
@@ -200,10 +181,10 @@ void Wamp::sendError(const enum wamp_messages &msgType, const std::string &error
     mp.pack(arguments);
     mp.pack(argumentsKW);
 
-    LOG ("sending error  " << mp.getJson());
-    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+    loggedSend("Error");
 
 }
+
 
 void Wamp::parseMessage(char* buffer, size_t size) {
 
@@ -429,7 +410,6 @@ void Wamp::parseMessage(char* buffer, size_t size) {
 
     }
 }
-
 
 void Wamp::close() {
     LOG("Wamp Closed Connection");
