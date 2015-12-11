@@ -11,3 +11,6 @@ source/test/node/node_modules
 .python-version
 source/test/python/env
 native
+crossbar/env
+node.log
+node.pid

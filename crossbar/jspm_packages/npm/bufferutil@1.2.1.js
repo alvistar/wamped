@@ -1,1 +1,0 @@
-module.exports = require("npm:bufferutil@1.2.1/index");

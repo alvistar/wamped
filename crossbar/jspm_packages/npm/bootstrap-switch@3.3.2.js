@@ -1,1 +1,0 @@
-module.exports = require("npm:bootstrap-switch@3.3.2/dist/js/bootstrap-switch");

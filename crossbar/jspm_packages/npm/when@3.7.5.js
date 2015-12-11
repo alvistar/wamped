@@ -1,1 +1,0 @@
-module.exports = require("npm:when@3.7.5/when");
