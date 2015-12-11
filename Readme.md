@@ -80,4 +80,93 @@ wamp->registerProcedure("com.mydevice.sum", sum, [](URI err) {
 ```
 
 # Example
-[TOBECOMPLETED]
+## Start new project
+- Create new directory
+``` shell
+mkdir hellowamp
+cd hellowamp
+```
+
+- Initialize yotta
+``` shell
+yotta init
+yotta target frdm-k64f-gcc
+```
+
+- Add dependency to wamped module to module.json
+``` json
+{
+  "name": "hellowamp",
+  "version": "0.0.0",
+  "bin": "./source",
+  "private": true,
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+  	"wamped" : "alvistar/wamped#",
+  	"mbed-drivers" : "*",
+  	"sockets" : "*"
+  }
+}
+```
+
+- (Optional) create config.json for logging
+``` json
+{
+	"wamped":{
+		"debug": {
+			"transport" : false,
+			"wamp" : true
+		}
+	}
+}
+```
+
+- Create the main app file "sources/app.cpp"
+``` C++
+#include <iostream>
+#include "mbed-drivers/mbed.h"
+#include "minar/minar.h"
+#include "wamped/Wamp.h"
+#include "wamped/WampTransportWS.h"
+#include "wamped/logger.h"
+
+WampTransportWS *wt;
+Wamp *wamp;
+
+
+DigitalOut cled {LED_BLUE,1};
+
+static void blinky(void) {
+    static DigitalOut led(LED1);
+    led = !led;
+}
+
+void app_start(int, char**) {
+
+    std::cout << "Hello world!\r\n";
+
+    wt = new WampTransportWS {"ws://demo.crossbar.io:8080"};
+    wamp = new Wamp (*wt);
+
+    wamp->onClose = [&]() {
+        NVIC_SystemReset();
+    };
+
+    wamp->connect([&]() {
+        LOG("Session joined :" << wamp->sessionID);
+
+        wamp->pub("com.freedom.welcome", "hello");
+
+        wamp->subscribe("com.freedom.oncounter", [](MPNode args, MPNode kwargs) {
+            LOG("Received event: " << args);
+            blinky();
+        });
+    });
+};
+```
+
+- We need to enable C++ 11 support: create file "sources/app.CMAKE"
+``` cmake
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-literal-suffix")
+```

@@ -13,7 +13,6 @@
   "dependencies": {
     "mbed-drivers": "*",
     "sockets": "*",
-    "nanostack-randlib": "^1.0.0",
     "mpack":"*"
   }
 }
