@@ -1,0 +1,21 @@
+{
+   "options": {
+      "reactor": null, 
+      "config": "/Users/avigano/Developer/wamp-mbed/crossbar/.crossbar/config.json", 
+      "logdir": null, 
+      "logformat": "colour", 
+      "command": "start", 
+      "logtofile": false, 
+      "cbdir": "/Users/avigano/Developer/wamp-mbed/crossbar/.crossbar", 
+      "loglevel": "trace"
+   }, 
+   "pid": 4911, 
+   "argv": [
+      "/Users/avigano/Developer/wamp-mbed/crossbar/env/bin/crossbar", 
+      "start", 
+      "--loglevel", 
+      "trace", 
+      "--logformat", 
+      "colour"
+   ]
+}

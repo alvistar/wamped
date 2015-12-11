@@ -1,0 +1,1 @@
+module.exports = require("npm:autobahn@0.9.8/index");

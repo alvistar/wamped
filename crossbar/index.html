@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aurelia</title>
+    <link rel="stylesheet" href="jspm_packages/npm/font-awesome@4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
+  <body aurelia-app="main">
+    <div class="splash">
+      <div class="message">Aurelia Wamp Demo</div>
+      <i class="fa fa-spinner fa-spin"></i>
+    </div>
+
+    <script src="jspm_packages/system.js"></script>
+    <script src="config.js"></script>
+    <script>
+      var systemLocate = System.locate;
+      System.locate = function(load) {
+        var System = this;
+        return Promise.resolve(systemLocate.call(this, load)).then(function(address) {
+          if(address.lastIndexOf("html.js") > -1) return address;
+          if(address.lastIndexOf("css.js") > -1) return address;
+          return address + System.cacheBust;
+        });
+      };
+      System.cacheBust = '?bust=' + Date.now();
+      System.import('aurelia-bootstrapper');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+module.exports = require("npm:utf-8-validate@1.2.1/index");
