@@ -174,4 +174,30 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-literal-suffix")
 **As Mbed OS is in current beta there can be problems in building with some versions of Cmake.**
 
 ## Full Demo
-[To be completed]
+Some demos are available in this repository.
+
+First change the ip address and put the one of your host in file *source/test.WampMBEDMain.cpp*.
+
+``` C++
+const std::string URL {"ws://192.168.20.192:8080/ws"};
+```
+
+To build it:
+``` shell
+git clone https://github.com/alvistar/wamped.git
+cd wamped
+yotta target frdm-k64f-gcc
+yotta build
+```
+
+Demos will be built in build/frdm-k64f-gcc/existing/source/test
+
+To launch demo Crossbar router:
+```
+cd crossbar
+pip install -r requirements.txt
+crossbar start --loglevel trace
+```
+
+You can now connect from freedom board and launch web demo at *localhost:8080*.
+
