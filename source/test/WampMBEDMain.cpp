@@ -25,6 +25,8 @@
 //#define ENABLE_ACCEL
 #define SAMPLERATE 100
 
+const std::string URL {"ws://192.168.20.192:8080/ws"};
+
 //Accelerometer
 I2C i2c(PTE25, PTE24);
 FXOS8700QAccelerometer accel(i2c,FXOS8700CQ_SLAVE_ADDR1);
@@ -84,7 +86,7 @@ static void sample(void) {
 static void pressed() {
     LOG("Publishing pressed event");
     btnCounter++;
-    wamp->publish("button");
+    wamp->pub("button",btnCounter);
 }
 
 static void sw3pressed() {
@@ -114,7 +116,7 @@ void app_start(int, char**) {
     std::cout << "Hello world!\n";
 
     //wt = new WampTransportRaw {"192.168.20.192",8081};
-    wt = new WampTransportWS {"ws://192.168.20.192:8080"};
+    wt = new WampTransportWS {URL};
     wamp = new Wamp (*wt);
 
 
@@ -140,18 +142,7 @@ void app_start(int, char**) {
         wamp->registerProcedure("com.freedom.switchon", switchon);
         wamp->registerProcedure("com.freedom.switchoff", switchoff);
         wamp->registerProcedure("com.freedom.getLedStatus", ledStatus);
-//        wamp->subscribe("com.freedom.switchon",[](MPNode args, MPNode kwargs) {
-//            (void) kwargs;
-//            LOG("Received switchon");
-//        	switchon(args[1]);
-//        });
-//
-//        wamp->subscribe("com.freedom.switchoff",[](MPNode args, MPNode kwargs) {
-//            (void) args;
-//            (void) kwargs;
-//            LOG("Received switchon");
-//            switchoff();
-//        });
+
     });
 
     button.rise (pressed);

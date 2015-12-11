@@ -11,7 +11,6 @@
 //WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //See the License for the specific language governing permissions and
 //        limitations under the License.
-
 #include <iostream>
 #include "wamped/Wamp.h"
 #include "wamped/WampTransportRaw.h"
@@ -49,7 +48,7 @@ int main() {
     std::cout << "Hello world!\n";
 
     //wt = new WampTransportRaw {"localhost"};
-    wt = new WampTransportWS {"ws://demo.crossbar.io:8080"};
+    wt = new WampTransportWS {"ws://localhost:8080/ws"};
     wamp = new Wamp (*wt);
 
     wamp->onClose = ([&]() {
