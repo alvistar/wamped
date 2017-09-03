@@ -124,9 +124,7 @@ void WampTransportRaw::sendMessage(char* buffer, size_t size) {
 
 void WampTransportRaw::decode(char *buffer, int size) {
     char prefixMSG[4];
-    unsigned long int max_len_send;
     unsigned long int msgSize = 0;
-    int serializer_type;
 
     //LOG(DEBUG) << "Decoding Size:" << size << "Payload:" << toHexString((const unsigned char *) buffer, size);
 
@@ -143,10 +141,8 @@ void WampTransportRaw::decode(char *buffer, int size) {
                         }
                         break;
                     case 1: //Re ad max len and streaming size
-                        max_len_send = (unsigned long int) pow(2, (9 + ((unsigned char) buffer[i] >> 4)));
-                        LOG("Max bytes per message " << max_len_send);
-                        serializer_type = buffer[i] & 0x0f;
-                        LOG("Serializer  " << serializer_type);
+                        LOG("Max bytes per message " << (unsigned long int) pow(2, (9 + ((unsigned char) buffer[i] >> 4))));
+                        LOG("Serializer  " << buffer[i] & 0x0f);
                         byteNumber++;
                         break;
                     case 2: // First reserved byte
