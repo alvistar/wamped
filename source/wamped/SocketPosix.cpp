@@ -16,7 +16,7 @@
 #include "SocketPosix.h"
 #include <netdb.h>
 #include <stdlib.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <cstring>
 #include <unistd.h>
 
