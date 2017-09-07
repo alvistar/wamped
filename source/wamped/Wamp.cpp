@@ -57,10 +57,17 @@ void Wamp::connect(std::function<void()> onJoin, std::function<void()> onError) 
     connect (onJoin);
 }
 
+#ifdef DEBUG_WAMP
 void Wamp::loggedSend(const std::string &msg) {
     LOG("Sending " << msg << ": " << mp.getJson());
     this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
 }
+#else
+void Wamp::loggedSend(const std::string &) {
+    this->transport.sendMessage(mp.getData(), mp.getUsedBuffer());
+}
+#endif
+
 
 void Wamp::hello(string realm) {
     mp.clear();
